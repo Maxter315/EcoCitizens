@@ -1,11 +1,12 @@
+#include <stdint.h>
 #include "ecx.h"
-#include <TFT_HX8357.h>
 
 TFT_HX8357 tft = TFT_HX8357();       // Invoke custom library
 
 void setup() {
     tft.init();
     tft.setRotation(1);
+
 }
 
 void loop() {
