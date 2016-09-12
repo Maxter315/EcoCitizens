@@ -9,6 +9,8 @@ void setup() {
 
 }
 
+struct Reading avgReadings(struct Reading*, int){};
+
 void loop() {
     
   // Fill screen with random colour so we can see the effect of printing with and without 
@@ -55,4 +57,28 @@ void loop() {
   tft.print("Binary = "); tft.println((int)fnumber, BIN); // Print as integer value in binary
   tft.print("Hexadecimal = "); tft.println((int)fnumber, HEX); // Print as integer number in Hexadecimal
   delay(10000);
+}
+
+
+struct Reading avgReadings(struct Reading* array, int num){
+
+    struct Reading acc;
+
+    for(int i=0; i<num; i++){
+        acc.CO += array[i].CO;
+        acc.dust += array[i].dust;
+        acc.temperature += array[i].temperature;
+        acc.pressure += array[i].pressure;
+        acc.humidity += array[i].humidity;
+    }
+
+    float denom = (float)num;
+
+    acc.CO = acc.CO / denom;
+    acc.dust = acc.dust / denom;
+    acc.temperature = acc.temperature / denom;
+    acc.pressure = acc.pressure / denom;
+    acc.humidity = acc.humidity / denom;
+
+    return acc;
 }
