@@ -9,7 +9,7 @@ void setup() {
 }
 
 void loop() {
-     
+    
   // Fill screen with random colour so we can see the effect of printing with and without 
   // a background colour defined
   tft.fillScreen(random(0xFFFF));
