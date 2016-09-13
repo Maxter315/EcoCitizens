@@ -1,5 +1,6 @@
 #define VERSION 001
 #define TEST
+#define DELTATIME 1000
 
 /* Libraries for installed modules */
 #include <Time.h>

@@ -2,59 +2,45 @@
 #include "sensors.h"
 #include "ecx.h"
 
+Reading avgReadings(Reading*, int){};
+/*============================================================================*/
+
 TFT_HX8357 tft = TFT_HX8357();
 SI7021 si7021;
 T5403 barometer(MODE_I2C);
 uint16_t sensorsError = 0;
+unsigned long time_cur, time_prev;
+unsigned long dt = DELTATIME;
+
 
 void setup() {
+
     tft.init();
     tft.setRotation(1);
+    tft.setCursor(0, 0, 2);
+    tft.setTextColor(TFT_WHITE,TFT_BLACK);
+    tft.setTextSize(2);
+
     sensorsError = sensorsInit();
 
 }
 
-Reading avgReadings(Reading*, int){};
-
 void loop() {
-    
-  // Fill screen with random colour so we can see the effect of printing with and without 
-  // a background colour defined
-  tft.fillScreen(random(0xFFFF));
-  
-  // Set "cursor" at top left corner of display (0,0) and select font 2
-  // (cursor will move to next line automatically during printing with 'tft.println'
-  //  or stay on the line is there is room for the text with tft.print)
-  tft.setCursor(0, 0, 2);
-  // Set the font colour to be white with a black background, set text size multiplier to 1
-  tft.setTextColor(TFT_WHITE,TFT_BLACK);  tft.setTextSize(1);
-  // We can now plot text on screen using the "print" class
-  tft.println("Hello World!");
-  
-  // Set the font colour to be yellow with no background, set to font 7
-  tft.setTextColor(TFT_YELLOW); tft.setTextFont(7);
-  tft.println(1234.56);
-  
-  // Set the font colour to be red with black background, set to font 4
-  tft.setTextColor(TFT_RED,TFT_BLACK);    tft.setTextFont(4);
-  tft.println((long)3735928559, HEX); // Should print DEADBEEF
+    time_cur = millis();
+    int iter = 0;
+    if (time_cur - time_prev > dt){
+        //sampling & collecting
 
-  // Set the font colour to be green with black background, set to font 4
-  tft.setTextColor(TFT_GREEN,TFT_BLACK);
-  tft.setTextFont(4);
-  tft.println("Groop");
-  tft.println("I implore thee,");
+        if (iter > 5){
+            //averaging, json, http
+            iter = 0;
+        }
 
-  // Test some print formatting functions
-  float fnumber = 123.45;
-   // Set the font colour to be blue with no background, set to font 4
-  tft.setTextColor(TFT_BLUE);    tft.setTextFont(4);
-  tft.print("Float = "); tft.println(fnumber);           // Print floating point number
-  tft.print("Binary = "); tft.println((int)fnumber, BIN); // Print as integer value in binary
-  tft.print("Hexadecimal = "); tft.println((int)fnumber, HEX); // Print as integer number in Hexadecimal
+        iter++;
+    }
 }
 
-
+/*============================================================================*/
 Reading avgReadings(Reading* array, int num){
 
     Reading acc;
