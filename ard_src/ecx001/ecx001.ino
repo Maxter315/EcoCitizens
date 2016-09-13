@@ -1,15 +1,20 @@
 #include <stdint.h>
+#include "sensors.h"
 #include "ecx.h"
 
-TFT_HX8357 tft = TFT_HX8357();       // Invoke custom library
+TFT_HX8357 tft = TFT_HX8357();
+SI7021 si7021;
+T5403 barometer(MODE_I2C);
+uint16_t sensorsError = 0;
 
 void setup() {
     tft.init();
     tft.setRotation(1);
+    sensorsError = sensorsInit();
 
 }
 
-struct Reading avgReadings(struct Reading*, int){};
+Reading avgReadings(Reading*, int){};
 
 void loop() {
     
@@ -40,15 +45,6 @@ void loop() {
   tft.println("Groop");
   tft.println("I implore thee,");
 
-  // Change to font 2
-  tft.setTextFont(2);
-  tft.println(F("my foonting turlingdromes.")); // Can store strings in FLASH to save RAM
-  tft.println("And hooptiously drangle me");
-  tft.println("with crinkly bindlewurdles,");
-  // This next line is deliberately made too long for the display width to test
-  // automatic text wrapping onto the next line
-  tft.println("Or I will rend thee in the gobberwarts with my blurglecruncheon, see if I don't!");
-  
   // Test some print formatting functions
   float fnumber = 123.45;
    // Set the font colour to be blue with no background, set to font 4
@@ -56,13 +52,12 @@ void loop() {
   tft.print("Float = "); tft.println(fnumber);           // Print floating point number
   tft.print("Binary = "); tft.println((int)fnumber, BIN); // Print as integer value in binary
   tft.print("Hexadecimal = "); tft.println((int)fnumber, HEX); // Print as integer number in Hexadecimal
-  delay(10000);
 }
 
 
-struct Reading avgReadings(struct Reading* array, int num){
+Reading avgReadings(Reading* array, int num){
 
-    struct Reading acc;
+    Reading acc;
 
     for(int i=0; i<num; i++){
         acc.CO += array[i].CO;

@@ -7,13 +7,11 @@
 
 #include <TFT_HX8357.h>
 
-
 /* Structures */
-struct Reading{
+typedef struct{
     float CO;
     float dust;
     float temperature;
     float pressure;
     float humidity;
-};
-
+}Reading;

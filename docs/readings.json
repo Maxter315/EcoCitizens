@@ -4,6 +4,7 @@
         "location":[102.20595,-35.00454],
         "date":"2016-09-09",
         "time":"09:13:45",
+        "sensErr":0,
         "Ts":180,
         "samples":5,
         "readings":[
