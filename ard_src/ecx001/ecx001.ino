@@ -32,7 +32,7 @@ void loop() {
         //sampling & collecting
 
         if (iter > 5){
-            //averaging, json, http
+            //averaging, json, send to esp
             iter = 0;
         }
 
