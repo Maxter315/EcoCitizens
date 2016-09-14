@@ -1,5 +1,4 @@
 # EcoCitizens
-EcoCitizens project.<br>
 Network of air quality sensors over the cities of Ukraine.<br>
 EGAP challenge.
 
