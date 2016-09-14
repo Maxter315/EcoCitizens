@@ -8,5 +8,6 @@
 #include <Si7021.h>
 #include <t5403.h>
 
-/*returns error code*/
+/* returns error code */
 uint16_t sensorsInit(void){};
+Reading getSensorsReadings(void){};
