@@ -15,9 +15,9 @@
 
 /* Structures */
 typedef struct{
-    float CO;
+    float mono;
     float dust;
-    float temperature;
-    float pressure;
-    float humidity;
+    float temp;
+    float pres;
+    float hum;
 }Reading;
