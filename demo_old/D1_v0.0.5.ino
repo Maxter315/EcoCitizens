@@ -301,7 +301,7 @@ void setup() {
   tft.setRotation(1);
 
   String dataString = "#time(millis),CO2(ppm),temp(degC),pressure(mmhg)";
-  char warn[10] = "SD - OK";
+  char warn[11] = "SD - OK";
   bool sderror = false;
   
   if (!SD.begin(chipSelect)) {
