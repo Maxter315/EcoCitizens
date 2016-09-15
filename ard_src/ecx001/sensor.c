@@ -20,7 +20,7 @@ uint16_t sensorsInit(void){
     //T5403. Pressure. i2c.
     tft.print("T5403\t\t");
     delay(DELAYL);
-    if(1){
+    if(0){
         tft.println("OK");
     }else{
         tft.println("FAIL");
@@ -31,7 +31,7 @@ uint16_t sensorsInit(void){
     //GP2Y10. Dust. Analogue.
     tft.print("GP2Y10\t\t");
     delay(DELAYL);
-    if(1){
+    if(0){
         tft.println("OK");
     }else{
         tft.println("FAIL");
@@ -42,7 +42,7 @@ uint16_t sensorsInit(void){
     //GP2Y10. Dust. Analogue.
     tft.print("MQ7-B\t\t");
     delay(DELAYL);
-    if(1){
+    if(0){
         tft.println("OK");
     }else{
         tft.println("FAIL");
