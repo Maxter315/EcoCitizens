@@ -24,6 +24,21 @@ void setup() {
 
     sensorsError = sensorsInit();
 
+    //SDCARD
+    String dataString = "#time(mil),CO(ppm),dust(mg/m3),temp(degC),pres(mmhg),hum";
+    //char warn[11] = "SD - OK";
+    bool sderror = false;
+
+    if (!SD.begin(chipSelect)) {
+        //warn="SD - ERROR";
+        sderror = true;
+    } else {
+        File dataFile = SD.open("datalog.txt", FILE_WRITE);
+        dataFile.println(dataString);
+        dataFile.close();
+    }
+    //SDCARD END
+
 }
 
 void loop() {
@@ -56,6 +71,23 @@ void loop() {
             accumRead.hum = accumRead.hum / denom;
 
             data[iter] = accumRead;
+
+            String dataString;
+            dataString = String(time_cur,DEC);
+            dataString += ",";
+            dataString += String(accumRead.mono,1);
+            dataString += ",";
+            dataString += String(accumRead.dust,3);
+            dataString += ",";
+            dataString += String(accumRead.temp,1);
+            dataString += ",";
+            dataString += String(accumRead.pres,1);
+            dataString += ",";
+            dataString += String(accumRead.hum,1);
+
+            File dataFile = SD.open("datalog.txt", FILE_WRITE);
+            dataFile.println(dataString);
+            dataFile.close();
 
             if (iter >= 4){
                 //json, send to esp

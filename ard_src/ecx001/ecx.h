@@ -10,6 +10,8 @@
 #include <DS1307RTC.h>
 #include <TFT_HX8357.h>
 #include <aJSON.h>
+#include <SD.h>
+#include <SPI.h>
 //#include <ArduinoJson.h>
 
 
