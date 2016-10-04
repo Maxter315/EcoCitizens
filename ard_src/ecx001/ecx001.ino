@@ -16,6 +16,7 @@ unsigned long dt = DELTATIME;
 
 void setup() {
 
+    //Display initialization
     tft.init();
     tft.setRotation(1);
     tft.setCursor(0, 0, 2);
@@ -24,7 +25,7 @@ void setup() {
 
     sensorsError = sensorsInit();
 
-    //SDCARD
+    //SDCARD INITIALIZATION
     String dataString = "#time(mil),CO(ppm),dust(mg/m3),temp(degC),pres(mmhg),hum";
     //char warn[11] = "SD - OK";
     bool sderror = false;
