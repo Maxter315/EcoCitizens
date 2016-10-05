@@ -2,7 +2,7 @@
 #include "sensors.h"
 #include "ecx.h"
 
-Reading avgReadings(Reading*, int){};
+Reading avgReadings(Reading*, int);
 
 /*============================================================================*/
 

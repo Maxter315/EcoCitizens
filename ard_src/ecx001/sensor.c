@@ -2,6 +2,9 @@
 #define DELAYL 700
 #define DELAYS 200
 
+#define DUSTDELAY1 280
+#define DUSTDELAY2 40
+
 uint16_t sensorsInit(void){
     int error = 0x00;
 
@@ -39,7 +42,7 @@ uint16_t sensorsInit(void){
     }
     delay(DELAYS);
 
-    //GP2Y10. Dust. Analogue.
+    //MQ-7B. Carbon monoxyde. Analogue.
     tft.print("MQ7-B\t\t");
     delay(DELAYL);
     if(0){
@@ -51,4 +54,35 @@ uint16_t sensorsInit(void){
     delay(DELAYS);
 
     return error;
-};
+}
+
+Reading getSensorsReadings(void){
+    Reading data;
+
+    data.mono = getMono;
+    data.dust = getDust;
+    data.temp = getTemp;
+    data.pres = getPres;
+    data.hum = getHum;
+
+    return data;
+}
+
+float getDust(void){
+    digitalWrite(DUSTLED,LOW);      //Turn ON LED
+    delayMicroseconds(DUSTDELAY1);  //Wait for 0.28ms
+    
+    int adc = analogRead(DUSTADC);  //Perform adc
+    
+    delayMicroseconds(DUSTDELAY2);  //Wait for 0.04ms
+    digitalWrite(DUSTLED,HIGH);     //Turn OFF LED
+
+    float volt = adc * (5.0/1024.0);
+    float dust = 0.17 * volt - 0.1;
+
+    return dust;
+}
+
+float getMono(void){
+
+}
