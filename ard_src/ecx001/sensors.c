@@ -1,18 +1,26 @@
 /*Sensors*/
+//#include "sensors.h"
+//#include <stdint.h>
+//#include "ecx.h"
+/*
 #define DELAYL 700
 #define DELAYS 200
 
 #define DUSTDELAY1 280
 #define DUSTDELAY2 40
+#define DUSTLED 7
+#define DUSTADC A1
+extern TFT_HX8357 tft;
 
 uint16_t sensorsInit(void){
     int error = 0x00;
 
     //Si7021. Temperature & Relative humidity. i2c.
     tft.print("Si7021\t\t");
-    si7021.begin();
+    //si7021.begin();
     delay(DELAYL);
-    if(si7021.getDeviceID() == 7021){
+    //if(si7021.getDeviceID() == 7021){
+    if(0){
         tft.println("OK");
     }else{
         tft.println("FAIL");
@@ -55,7 +63,7 @@ uint16_t sensorsInit(void){
 
     return error;
 }
-
+/*
 Reading getSensorsReadings(void){
     Reading data;
 
@@ -86,3 +94,4 @@ float getDust(void){
 float getMono(void){
 
 }
+*/

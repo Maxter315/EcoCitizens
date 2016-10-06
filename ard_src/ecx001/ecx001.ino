@@ -1,18 +1,19 @@
 #include <stdint.h>
-#include "sensors.h"
+//#include "sensors.h"
 #include "ecx.h"
+#include "sensors.c"
+
 
 Reading avgReadings(Reading*, int);
 
 /*============================================================================*/
 
 TFT_HX8357 tft = TFT_HX8357();
-SI7021 si7021;
-T5403 barometer(MODE_I2C);
+//SI7021 si7021;
+//T5403 barometer(MODE_I2C);
 uint16_t sensorsError = 0;
 unsigned long time_cur, time_prev;
 unsigned long dt = DELTATIME;
-
 
 void setup() {
 
@@ -22,9 +23,10 @@ void setup() {
     tft.setCursor(0, 0, 2);
     tft.setTextColor(TFT_WHITE,TFT_BLACK);
     tft.setTextSize(2);
+    tft.print("hello");
 
-    sensorsError = sensorsInit();
-
+    //sensorsError = sensorsInit();
+/*
     //SDCARD INITIALIZATION
     String dataString = "#time(mil),CO(ppm),dust(mg/m3),temp(degC),pres(mmhg),hum";
     //char warn[11] = "SD - OK";
@@ -39,17 +41,19 @@ void setup() {
         dataFile.close();
     }
     //SDCARD END
-
+*/
 }
 
 void loop() {
     time_cur = millis();
     int iter = 0;
     int nsamp = 0;
-    Reading data[DATLEN];
-    Reading accumRead;
+    
+    //Reading data[DATLEN];
+    //Reading accumRead;
 
     if (time_cur - time_prev > dt){
+      /*
         //sampling & collecting, 1000ms
         Reading curread = getSensorsReadings();
         nsamp++;
@@ -94,7 +98,7 @@ void loop() {
                 //json, send to esp
 
                 //json generating
-                /***************************/
+                
                 StaticJsonBuffer<400> jsonBuffer;
                 JsonObject& root = jsonBuffer.createObject();
     
@@ -131,13 +135,14 @@ void loop() {
 
                 root.printTo(Serial);
                 Serial.println();
-                /**********************************/
+                
+                
 
                 iter = 0;
             } else {
                 iter++;
             }
-        }
+        }*/
     }
 }
 
