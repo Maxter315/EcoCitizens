@@ -1,8 +1,8 @@
 /*Sensors*/
-//#include "sensors.h"
-//#include <stdint.h>
+#include "sensors.h"
+
 //#include "ecx.h"
-/*
+
 #define DELAYL 700
 #define DELAYS 200
 
@@ -10,17 +10,19 @@
 #define DUSTDELAY2 40
 #define DUSTLED 7
 #define DUSTADC A1
-extern TFT_HX8357 tft;
+//extern TFT_HX8357 tft;
 
-uint16_t sensorsInit(void){
-    int error = 0x00;
+uint16_t sensorsInit(TFT_HX8357 tft){
+    uint16_t error = 0x00;
+    extern SI7021 si7021;
+    T5403 barometer(MODE_I2C);
 
     //Si7021. Temperature & Relative humidity. i2c.
-    tft.print("Si7021\t\t");
-    //si7021.begin();
+    tft.print("Si7021: ");
+    si7021.begin();
     delay(DELAYL);
-    //if(si7021.getDeviceID() == 7021){
-    if(0){
+    if(si7021.getDeviceID() == 7021){
+    //if(0){
         tft.println("OK");
     }else{
         tft.println("FAIL");
@@ -29,9 +31,11 @@ uint16_t sensorsInit(void){
     delay(DELAYS);
 
     //T5403. Pressure. i2c.
-    tft.print("T5403\t\t");
+    tft.print("T5403: ");
+    barometer.begin();
+    double pressure_abs  = barometer.getPressure(MODE_ULTRA);
     delay(DELAYL);
-    if(0){
+    if(pressure_abs != 0.0){
         tft.println("OK");
     }else{
         tft.println("FAIL");
@@ -40,7 +44,7 @@ uint16_t sensorsInit(void){
     delay(DELAYS);
 
     //GP2Y10. Dust. Analogue.
-    tft.print("GP2Y10\t\t");
+    tft.print("GP2Y10: ");
     delay(DELAYL);
     if(0){
         tft.println("OK");
@@ -51,7 +55,7 @@ uint16_t sensorsInit(void){
     delay(DELAYS);
 
     //MQ-7B. Carbon monoxyde. Analogue.
-    tft.print("MQ7-B\t\t");
+    tft.print("MQ7-B: ");
     delay(DELAYL);
     if(0){
         tft.println("OK");
@@ -61,6 +65,8 @@ uint16_t sensorsInit(void){
     }
     delay(DELAYS);
 
+    tft.print("ERROR CODE: ");
+    tft.print((long)error,HEX);
     return error;
 }
 /*
