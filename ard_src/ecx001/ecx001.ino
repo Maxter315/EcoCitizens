@@ -1,8 +1,37 @@
-#include <stdint.h>
+#define VERSION 001
+#define TEST 1
+#define DELTATIME 1000
+#define DATLEN 5
+
+#define SENSOR_ID "UA-KR-0001"
+
+//#include <Time.h>
+//#include <DS1307RTC.h>
+
+//#include <aJSON.h>
+//#include <SD.h>
+#include <SPI.h>
+//#include <ArduinoJson.h>
+//#include <stdint.h>
 #include "sensors.h"
-#include "ecx.h"
+
+/* Structures */
+typedef struct{
+    float mono;
+    float dust;
+    float temp;
+    float pres;
+    float hum;
+}Reading;
 
 Reading avgReadings(Reading*, int);
+
+void loading(TFT_HX8357 tft){
+    for(int i=0;i<10;i++){
+        tft.print('.');
+        delay(500);
+    }
+}
 
 /*============================================================================*/
 
@@ -13,18 +42,30 @@ uint16_t sensorsError = 0;
 unsigned long time_cur, time_prev;
 unsigned long dt = DELTATIME;
 
-
 void setup() {
 
     //Display initialization
     tft.init();
     tft.setRotation(1);
     tft.setCursor(0, 0, 2);
+    tft.fillScreen(TFT_BLACK);
+    
     tft.setTextColor(TFT_WHITE,TFT_BLACK);
-    tft.setTextSize(2);
+    tft.setTextSize(1);
+    tft.print("hello");
+    delay(2000);
 
-    sensorsError = sensorsInit();
+    tft.setCursor(0, 0, 2);
+    tft.setTextColor(TFT_BLACK,TFT_BLACK);
+    tft.print("hello");
 
+    tft.setTextColor(TFT_WHITE,TFT_BLACK);
+    tft.setCursor(0, 25, 2);
+    sensorsError = sensorsInit(tft);
+
+    barometer.begin();
+    si7021.setHumidityRes(12);
+/*
     //SDCARD INITIALIZATION
     String dataString = "#time(mil),CO(ppm),dust(mg/m3),temp(degC),pres(mmhg),hum";
     //char warn[11] = "SD - OK";
@@ -39,17 +80,45 @@ void setup() {
         dataFile.close();
     }
     //SDCARD END
-
+*/
 }
 
 void loop() {
     time_cur = millis();
     int iter = 0;
     int nsamp = 0;
-    Reading data[DATLEN];
-    Reading accumRead;
+    double pressure_abs,humi,tempi;
+
+    //tft.println("***");
+    //loading(tft);
+    //Reading data[DATLEN];
+    //Reading accumRead;
 
     if (time_cur - time_prev > dt){
+        time_prev = time_cur;
+        tft.setCursor(0, 150, 2);
+        tft.setTextColor(TFT_BLACK,TFT_BLACK);
+        tft.print("Pressure: ");
+        tft.println(pressure_abs);
+        tft.print("Humidity: ");
+        tft.println(humi);
+        tft.print("Temperature: ");
+        tft.println(tempi);
+
+        pressure_abs  = barometer.getPressure(MODE_ULTRA);
+        humi = si7021.readHumidity();
+        tempi = si7021.readTemp();
+        
+        tft.setTextColor(TFT_WHITE,TFT_BLACK);
+        tft.print("Pressure: ");
+        tft.println(pressure_abs);
+        tft.print("Humidity: ");
+        tft.println(humi);
+        tft.print("Temperature: ");
+        tft.println(tempi);
+        
+
+    /*
         //sampling & collecting, 1000ms
         Reading curread = getSensorsReadings();
         nsamp++;
@@ -94,7 +163,7 @@ void loop() {
                 //json, send to esp
 
                 //json generating
-                /***************************/
+                
                 StaticJsonBuffer<400> jsonBuffer;
                 JsonObject& root = jsonBuffer.createObject();
     
@@ -131,13 +200,14 @@ void loop() {
 
                 root.printTo(Serial);
                 Serial.println();
-                /**********************************/
+                
+                
 
                 iter = 0;
             } else {
                 iter++;
             }
-        }
+        }*/
     }
 }
 
