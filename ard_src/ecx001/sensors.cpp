@@ -10,7 +10,6 @@
 #define DUSTDELAY2 40
 #define DUSTLED 7
 #define DUSTADC A1
-//extern TFT_HX8357 tft;
 
 uint16_t sensorsInit(TFT_HX8357 tft){
     uint16_t error = 0x00;
@@ -81,7 +80,7 @@ Reading getSensorsReadings(void){
 
     return data;
 }
-
+*/
 float getDust(void){
     digitalWrite(DUSTLED,LOW);      //Turn ON LED
     delayMicroseconds(DUSTDELAY1);  //Wait for 0.28ms
@@ -96,7 +95,7 @@ float getDust(void){
 
     return dust;
 }
-
+/*
 float getMono(void){
 
 }
