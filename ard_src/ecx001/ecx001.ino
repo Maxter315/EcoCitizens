@@ -87,7 +87,7 @@ void loop() {
     time_cur = millis();
     int iter = 0;
     int nsamp = 0;
-    double pressure_abs,humi,tempi,dusti;
+    double pressure_abs,humi,tempi;
 
     //tft.println("***");
     //loading(tft);
@@ -104,13 +104,10 @@ void loop() {
         tft.println(humi);
         tft.print("Temperature: ");
         tft.println(tempi);
-        tft.print("Dust: ");
-        tft.println(dusti);
 
         pressure_abs  = barometer.getPressure(MODE_ULTRA);
         humi = si7021.readHumidity();
         tempi = si7021.readTemp();
-        dusti = getDust();
         
         tft.setTextColor(TFT_WHITE,TFT_BLACK);
         tft.print("Pressure: ");
@@ -119,8 +116,7 @@ void loop() {
         tft.println(humi);
         tft.print("Temperature: ");
         tft.println(tempi);
-        tft.print("Dust: ");
-        tft.println(dusti);
+        
 
     /*
         //sampling & collecting, 1000ms

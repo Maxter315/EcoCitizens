@@ -72,16 +72,17 @@ uint16_t sensorsInit(TFT_HX8357 tft){
 /*
 Reading getSensorsReadings(void){
     Reading data;
+
     data.mono = getMono;
     data.dust = getDust;
     data.temp = getTemp;
     data.pres = getPres;
     data.hum = getHum;
+
     return data;
 }
-*/
+
 float getDust(void){
-    pinMode(DUSTLED,OUTPUT);  
     digitalWrite(DUSTLED,LOW);      //Turn ON LED
     delayMicroseconds(DUSTDELAY1);  //Wait for 0.28ms
     
@@ -95,7 +96,8 @@ float getDust(void){
 
     return dust;
 }
-/*
+
 float getMono(void){
+
 }
 */

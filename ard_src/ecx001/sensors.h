@@ -15,7 +15,7 @@
 uint16_t sensorsInit(TFT_HX8357);
 
 //float getMono(void);
-float getDust(void);
+//float getDust(void);
 //float getTemp(void);
 float getPres(void);
 //float getHum(void);
