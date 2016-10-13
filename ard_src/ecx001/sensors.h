@@ -14,8 +14,8 @@
 /* returns error code */
 uint16_t sensorsInit(TFT_HX8357);
 
-float getMono(void);
-//float getDust(void);
+float getMono(uint8_t);
+float getDust(void);
 //float getTemp(void);
 float getPres(void);
 //float getHum(void);

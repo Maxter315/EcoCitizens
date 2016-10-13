@@ -10,6 +10,9 @@
 #define DUSTDELAY2 40
 #define DUSTLED 7
 #define DUSTADC A1
+
+#define MONOADC A2
+#define MONOHEAT 6
 //extern TFT_HX8357 tft;
 
 uint16_t sensorsInit(TFT_HX8357 tft){
@@ -97,16 +100,18 @@ float getDust(void){
     return dust;
 }
 
-float getMono(int sec){
-    if(sec < 60) digitalWrite(MONOHEAT,HIGH);
-    if (sec == 60){
-        int adc = analogRead(MONOADC);
-        
-        digitalWrite(MONOHEAT,LOW);
-    } else {
-        digitalWrite(MONOHEAT,LOW);
+float getMono(uint8_t sec){
+int adc;
+    pinMode(MONOHEAT,OUTPUT);
+    if(sec < 60) digitalWrite(MONOHEAT,LOW);
+    else if(sec == 60){
+        adc = analogRead(MONOADC);
+        //digitalWrite(MONOHEAT,HIGH);
+    } else if(sec > 60){
+        digitalWrite(MONOHEAT,HIGH);
     }
-
+adc = analogRead(MONOADC);
 float static res = 0.0;
+res = (float) adc;
 return res;
 }
