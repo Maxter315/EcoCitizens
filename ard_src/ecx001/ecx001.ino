@@ -1,20 +1,3 @@
-Skip to content
-This repository
-Search
-Pull requests
-Issues
-Gist
- @Maxter315
- Unwatch 1
-  Star 0
-  Fork 0 Maxter315/EcoCitizens
- Code  Issues 0  Pull requests 0  Projects 0  Wiki  Pulse  Graphs  Settings
-Branch: analogue Find file Copy pathEcoCitizens/ard_src/ecx001/ecx001.ino
-69bab2e  2 days ago
-@Maxter315 Maxter315 dust sensor added
-1 contributor
-RawBlameHistory     
-242 lines (196 sloc)  6.71 KB
 #define VERSION 001
 #define TEST 1
 #define DELTATIME 1000
@@ -56,6 +39,7 @@ TFT_HX8357 tft = TFT_HX8357();
 SI7021 si7021;
 T5403 barometer(MODE_I2C);
 uint16_t sensorsError = 0;
+uint8_t nsamp = 0;
 unsigned long time_cur, time_prev;
 unsigned long dt = DELTATIME;
 
@@ -102,8 +86,8 @@ void setup() {
 void loop() {
     time_cur = millis();
     int iter = 0;
-    int nsamp = 0;
-    double pressure_abs,humi,tempi,dusti;
+    //int nsamp = 0;
+    double pressure_abs,humi,tempi,dusti,monoi;
 
     //tft.println("***");
     //loading(tft);
@@ -112,6 +96,8 @@ void loop() {
 
     if (time_cur - time_prev > dt){
         time_prev = time_cur;
+        nsamp>=150?nsamp=0:nsamp++;
+
         tft.setCursor(0, 150, 2);
         tft.setTextColor(TFT_BLACK,TFT_BLACK);
         tft.print("Pressure: ");
@@ -121,12 +107,16 @@ void loop() {
         tft.print("Temperature: ");
         tft.println(tempi);
         tft.print("Dust: ");
-        tft.println(dusti);
+        tft.println(monoi);
+        tft.print(nsamp);
 
         pressure_abs  = barometer.getPressure(MODE_ULTRA);
         humi = si7021.readHumidity();
         tempi = si7021.readTemp();
         dusti = getDust();
+        monoi = getMono(nsamp);
+        //pinMode(6,OUTPUT);
+        //digitalWrite(6,LOW);
 
         tft.setTextColor(TFT_WHITE,TFT_BLACK);
         tft.print("Pressure: ");
@@ -136,13 +126,13 @@ void loop() {
         tft.print("Temperature: ");
         tft.println(tempi);
         tft.print("Dust: ");
-        tft.println(dusti);
-        
+        tft.println(monoi);
+        tft.print(nsamp);
 
     /*
         //sampling & collecting, 1000ms
         Reading curread = getSensorsReadings();
-        nsamp++;
+        
         accumRead.mono += curread.mono;
         accumRead.dust += curread.dust;
         accumRead.temp += curread.temp;
@@ -245,5 +235,3 @@ Reading avgReadings(Reading* array, int num){
 
     return acc;
 }
-Contact GitHub API Training Shop Blog About
-© 2016 GitHub, Inc. Terms Privacy Security Status Help
