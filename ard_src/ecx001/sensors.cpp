@@ -11,6 +11,9 @@
 #define DUSTLED 7
 #define DUSTADC A1
 
+#define MONOADC A2
+#define MONOHEAT 6
+
 uint16_t sensorsInit(TFT_HX8357 tft){
     uint16_t error = 0x00;
     extern SI7021 si7021;
@@ -95,8 +98,17 @@ float getDust(void){
 
     return dust;
 }
-/*
-float getMono(void){
 
+float getMono(int sec){
+    if(sec < 60) digitalWrite(MONOHEAT,HIGH);
+    if (sec == 60){
+        int adc = analogRead(MONOADC);
+        
+        digitalWrite(MONOHEAT,LOW);
+    } else {
+        digitalWrite(MONOHEAT,LOW);
+    }
+
+float static res = 0.0;
+return res;
 }
-*/
