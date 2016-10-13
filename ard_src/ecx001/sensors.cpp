@@ -81,7 +81,7 @@ Reading getSensorsReadings(void){
 
     return data;
 }
-
+*/
 float getDust(void){
     digitalWrite(DUSTLED,LOW);      //Turn ON LED
     delayMicroseconds(DUSTDELAY1);  //Wait for 0.28ms
@@ -97,7 +97,16 @@ float getDust(void){
     return dust;
 }
 
-float getMono(void){
+float getMono(int sec){
+    if(sec < 60) digitalWrite(MONOHEAT,HIGH);
+    if (sec == 60){
+        int adc = analogRead(MONOADC);
+        
+        digitalWrite(MONOHEAT,LOW);
+    } else {
+        digitalWrite(MONOHEAT,LOW);
+    }
 
+float static res = 0.0;
+return res;
 }
-*/
