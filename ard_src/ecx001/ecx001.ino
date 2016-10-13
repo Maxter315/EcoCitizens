@@ -5,6 +5,7 @@
 
 #define SENSOR_ID "UA-KR-0001"
 
+#include <Arduino.h>
 //#include <Time.h>
 //#include <DS1307RTC.h>
 
@@ -14,6 +15,7 @@
 //#include <ArduinoJson.h>
 //#include <stdint.h>
 #include "sensors.h"
+#include "graph.cpp"
 
 /* Structures */
 typedef struct{
@@ -26,7 +28,7 @@ typedef struct{
 
 Reading avgReadings(Reading*, int);
 
-void loading(TFT_HX8357 tft){
+void loading(TFT_HX8357 &tft){
     for(int i=0;i<10;i++){
         tft.print('.');
         delay(500);
