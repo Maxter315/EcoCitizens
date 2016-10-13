@@ -1,3 +1,20 @@
+Skip to content
+This repository
+Search
+Pull requests
+Issues
+Gist
+ @Maxter315
+ Unwatch 1
+  Star 0
+  Fork 0 Maxter315/EcoCitizens
+ Code  Issues 0  Pull requests 0  Projects 0  Wiki  Pulse  Graphs  Settings
+Branch: analogue Find file Copy pathEcoCitizens/ard_src/ecx001/ecx001.ino
+69bab2e  2 days ago
+@Maxter315 Maxter315 dust sensor added
+1 contributor
+RawBlameHistory     
+242 lines (196 sloc)  6.71 KB
 #define VERSION 001
 #define TEST 1
 #define DELTATIME 1000
@@ -70,7 +87,6 @@ void setup() {
     String dataString = "#time(mil),CO(ppm),dust(mg/m3),temp(degC),pres(mmhg),hum";
     //char warn[11] = "SD - OK";
     bool sderror = false;
-
     if (!SD.begin(chipSelect)) {
         //warn="SD - ERROR";
         sderror = true;
@@ -87,7 +103,7 @@ void loop() {
     time_cur = millis();
     int iter = 0;
     int nsamp = 0;
-    double pressure_abs,humi,tempi;
+    double pressure_abs,humi,tempi,dusti;
 
     //tft.println("***");
     //loading(tft);
@@ -104,11 +120,14 @@ void loop() {
         tft.println(humi);
         tft.print("Temperature: ");
         tft.println(tempi);
+        tft.print("Dust: ");
+        tft.println(dusti);
 
         pressure_abs  = barometer.getPressure(MODE_ULTRA);
         humi = si7021.readHumidity();
         tempi = si7021.readTemp();
-        
+        dusti = getDust();
+
         tft.setTextColor(TFT_WHITE,TFT_BLACK);
         tft.print("Pressure: ");
         tft.println(pressure_abs);
@@ -116,32 +135,29 @@ void loop() {
         tft.println(humi);
         tft.print("Temperature: ");
         tft.println(tempi);
+        tft.print("Dust: ");
+        tft.println(dusti);
         
 
     /*
         //sampling & collecting, 1000ms
         Reading curread = getSensorsReadings();
         nsamp++;
-
         accumRead.mono += curread.mono;
         accumRead.dust += curread.dust;
         accumRead.temp += curread.temp;
         accumRead.pres += curread.pres;
         accumRead.hum += curread.hum;
-
         if (nsamp >= 180){
             //averaging and storing to data[i];
             float denom = (float)nsamp;
             nsamp = 0;
-
             accumRead.mono = accumRead.mono / denom;
             accumRead.dust = accumRead.dust / denom;
             accumRead.temp = accumRead.temp / denom;
             accumRead.pres = accumRead.pres / denom;
             accumRead.hum = accumRead.hum / denom;
-
             data[iter] = accumRead;
-
             String dataString;
             dataString = String(time_cur,DEC);
             dataString += ",";
@@ -154,14 +170,11 @@ void loop() {
             dataString += String(accumRead.pres,1);
             dataString += ",";
             dataString += String(accumRead.hum,1);
-
             File dataFile = SD.open("datalog.txt", FILE_WRITE);
             dataFile.println(dataString);
             dataFile.close();
-
             if (iter >= 4){
                 //json, send to esp
-
                 //json generating
                 
                 StaticJsonBuffer<400> jsonBuffer;
@@ -197,12 +210,10 @@ void loop() {
                     apres.add(double_with_n_digits(data[i].pres, 1));
                     ahum.add(double_with_n_digits(data[i].hum, 1));
                 }
-
                 root.printTo(Serial);
                 Serial.println();
                 
                 
-
                 iter = 0;
             } else {
                 iter++;
@@ -234,3 +245,5 @@ Reading avgReadings(Reading* array, int num){
 
     return acc;
 }
+Contact GitHub API Training Shop Blog About
+© 2016 GitHub, Inc. Terms Privacy Security Status Help
