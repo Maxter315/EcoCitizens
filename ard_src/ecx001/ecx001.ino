@@ -1,6 +1,8 @@
 #define VERSION 001
 #define TEST 1
 #define DELTATIME 1000
+#define TSAMP 150
+#define TSAMPF 150.0
 #define DATLEN 5
 
 #define SENSOR_ID "UA-KR-0001"
@@ -10,21 +12,18 @@
 //#include <DS1307RTC.h>
 
 //#include <aJSON.h>
-//#include <SD.h>
+#include <SD.h>
 #include <SPI.h>
 //#include <ArduinoJson.h>
 //#include <stdint.h>
 #include "sensors.h"
-#include "graph.cpp"
+#include "graph.h"
 
-/* Structures */
-typedef struct{
-    float mono;
-    float dust;
-    float temp;
-    float pres;
-    float hum;
-}Reading;
+#include "RTClib.h"
+RTC_DS1307 rtc;
+char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+
+const int chipSelect = 53;
 
 Reading avgReadings(Reading*, int);
 
@@ -37,138 +36,422 @@ void loading(TFT_HX8357 &tft){
 
 /*============================================================================*/
 
+// these are the only external variables used by the graph function
+// it's a flag to draw the coordinate system only on the first call to the Graph() function
+// and will mimize flicker
+// also create some variables to store the old x and y, if you draw 2 graphs on the same display
+// you will need to store ox and oy per each display
+boolean display1 = true;
+boolean update1 = true;
+
+double ox = -999, oy = -999; // Force them to be off screen
+
+/*
+
+  function to draw a cartesian coordinate system and plot whatever data you want
+  just pass x and y and the graph will be drawn
+
+  huge arguement list
+  &d name of your display object
+  x = x data point
+  y = y datapont
+  gx = x graph location (lower left)
+  gy = y graph location (lower left)
+  w = width of graph
+  h = height of graph
+  xlo = lower bound of x axis
+  xhi = upper bound of x asis
+  xinc = division of x axis (distance not count)
+  ylo = lower bound of y axis
+  yhi = upper bound of y asis
+  yinc = division of y axis (distance not count)
+  title = title of graph
+  xlabel = x asis label
+  ylabel = y asis label
+  &redraw = flag to redraw graph on first call only
+  color = plotted trace colour
+*/
+
+
+void Graph(TFT_HX8357 &tft, double x, double y, byte dp,
+                           double gx, double gy, double w, double h,
+                           double xlo, double xhi, double xinc,
+                           double ylo, double yhi, double yinc,
+                           char *title, char *xlabel, char *ylabel,
+                           boolean &redraw, unsigned int color) 
+{
+  double ydiv, xdiv;
+  double i;
+  double temp;
+  int rot, newrot;
+
+  // gcolor = graph grid colors
+  // acolor = axes line colors
+  // pcolor = color of your plotted data
+  // tcolor = text color
+  // bcolor = background color
+  unsigned int gcolor = DKBLUE;
+  unsigned int acolor = RED;
+  unsigned int pcolor = color;
+  unsigned int tcolor = WHITE;
+  unsigned int bcolor = BLACK;
+
+  if (redraw == true) {
+
+    redraw = false;
+    // initialize old x and old y in order to draw the first point of the graph
+    // but save the transformed value
+    // note my transform funcition is the same as the map function, except the map uses long and we need doubles
+    //ox = (x - xlo) * ( w) / (xhi - xlo) + gx;
+    //oy = (y - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
+
+    tft.setTextDatum(MR_DATUM);
+
+    // draw y scale
+    for ( i = ylo; i <= yhi; i += yinc) {
+      // compute the transform
+      temp =  (i - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
+
+      if (i == 0) {
+        tft.drawLine(gx, temp, gx + w, temp, acolor);
+        tft.setTextColor(acolor, bcolor);
+        tft.drawString(xlabel, (int)(gx + w) , (int)temp, 2);
+      }
+      else {
+        tft.drawLine(gx, temp, gx + w, temp, gcolor);
+      }
+      // draw the axis labels
+      tft.setTextColor(tcolor, bcolor);
+      // precision is default Arduino--this could really use some format control
+      tft.drawFloat(i, dp, gx - 4, temp, 1);
+    }
+
+    // draw x scale
+    for (i = xlo; i <= xhi; i += xinc) {
+
+      // compute the transform
+      temp =  (i - xlo) * ( w) / (xhi - xlo) + gx;
+      if (i == 0) {
+        tft.drawLine(temp, gy, temp, gy - h, acolor);
+        tft.setTextColor(acolor, bcolor);
+        tft.setTextDatum(BC_DATUM);
+        tft.drawString(ylabel, (int)temp, (int)(gy - h - 8) , 2);
+      }
+      else {
+        tft.drawLine(temp, gy, temp, gy - h, gcolor);
+      }
+      // draw the axis labels
+      tft.setTextColor(tcolor, bcolor);
+      tft.setTextDatum(TC_DATUM);
+      // precision is default Arduino--this could really use some format control
+      tft.drawFloat(i, dp, temp, gy + 7, 1);
+    }
+
+    //now draw the graph labels
+    tft.setTextColor(tcolor, bcolor);
+    tft.drawString(title, (int)(gx + w / 2) , (int)(gy - h - 30), 4);
+  }
+
+  // the coordinates are now drawn, plot the data
+  // the entire plotting code are these few lines...
+  // recall that ox and oy are initialized above
+  //x =  (x - xlo) * ( w) / (xhi - xlo) + gx;
+  //y =  (y - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
+  //tft.drawLine(ox, oy, x, y, pcolor);
+  // it's up to you but drawing 2 more lines to give the graph some thickness
+  //tft.drawLine(ox, oy + 1, x, y + 1, pcolor);
+  //tft.drawLine(ox, oy - 1, x, y - 1, pcolor);
+  //ox = x;
+  //oy = y;
+
+}
+
+void Trace(TFT_HX8357 &tft, double x,  double y,  byte dp,
+           double gx, double gy,
+           double w, double h,
+           double xlo, double xhi, double xinc,
+           double ylo, double yhi, double yinc,
+           char *title, char *xlabel, char *ylabel,
+           boolean &update1, unsigned int color)
+{
+  double ydiv, xdiv;
+  double i;
+  double temp;
+  int rot, newrot;
+
+  //unsigned int gcolor = DKBLUE;   // gcolor = graph grid color
+  unsigned int acolor = RED;        // acolor = main axes and label color
+  unsigned int pcolor = color;      // pcolor = color of your plotted data
+  unsigned int tcolor = WHITE;      // tcolor = text color
+  unsigned int bcolor = BLACK;      // bcolor = background color
+
+  // initialize old x and old y in order to draw the first point of the graph
+  // but save the transformed value
+  // note my transform funcition is the same as the map function, except the map uses long and we need doubles
+  if (update1) {
+    update1 = false;
+    
+    ox = (x - xlo) * ( w) / (xhi - xlo) + gx;
+    oy = (y - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
+
+    if ((ox < gx) || (ox > gx+w)) {update1 = true; return;}
+    if ((oy < gy-h) || (oy > gy)) {update1 = true; return;}
+    
+
+    tft.setTextDatum(MR_DATUM);
+
+    // draw y scale
+    for ( i = ylo; i <= yhi; i += yinc) {
+      // compute the transform
+      temp =  (i - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
+
+      if (i == 0) {
+        tft.setTextColor(acolor, bcolor);
+        tft.drawString(xlabel, (int)(gx + w) , (int)temp, 2);
+      }
+      // draw the axis labels
+      tft.setTextColor(tcolor, bcolor);
+      // precision is default Arduino--this could really use some format control
+      tft.drawFloat(i, dp, gx - 4, temp, 1);
+    }
+
+    // draw x scale
+    for (i = xlo; i <= xhi; i += xinc) {
+
+      // compute the transform
+      temp =  (i - xlo) * ( w) / (xhi - xlo) + gx;
+      if (i == 0) {
+        tft.setTextColor(acolor, bcolor);
+        tft.setTextDatum(BC_DATUM);
+        tft.drawString(ylabel, (int)temp, (int)(gy - h - 8) , 2);
+      }
+
+      // draw the axis labels
+      tft.setTextColor(tcolor, bcolor);
+      tft.setTextDatum(TC_DATUM);
+      // precision is default Arduino--this could really use some format control
+      tft.drawFloat(i, dp, temp, gy + 7, 1);
+    }
+
+    //now draw the graph labels
+    tft.setTextColor(tcolor, bcolor);
+    tft.drawString(title, (int)(gx + w / 2) , (int)(gy - h - 30), 4);
+  }
+
+  // the coordinates are now drawn, plot the data
+  // the entire plotting code are these few lines...
+  // recall that ox and oy are initialized above
+  x =  (x - xlo) * ( w) / (xhi - xlo) + gx;
+  y =  (y - ylo) * (gy - h - gy) / (yhi - ylo) + gy;
+
+  if ((x < gx) || (x > gx+w)) {update1 = true; return;}
+  if ((y < gy-h) || (y > gy)) {update1 = true; return;}
+    
+    
+  tft.drawLine(ox, oy, x, y, pcolor);
+  // it's up to you but drawing 2 more lines to give the graph some thickness
+  //tft.drawLine(ox, oy + 1, x, y + 1, pcolor);
+  //tft.drawLine(ox, oy - 1, x, y - 1, pcolor);
+  ox = x;
+  oy = y;
+
+}
+
+/*
+
+  End of graphing function
+
+*/
+
+
+/*============================================================================*/
+
 TFT_HX8357 tft = TFT_HX8357();
 SI7021 si7021;
 T5403 barometer(MODE_I2C);
+
 uint16_t sensorsError = 0;
 uint8_t nsamp = 0;
 unsigned long time_cur, time_prev;
 unsigned long dt = DELTATIME;
 
 void setup() {
-
     //Display initialization
-    tft.init();
-    tft.setRotation(1);
-    tft.setCursor(0, 0, 2);
-    tft.fillScreen(TFT_BLACK);
+        tft.init();
+        tft.setRotation(1);
+        tft.setCursor(0, 0, 2);
+        tft.fillScreen(TFT_BLACK);
+        
+        tft.setTextColor(TFT_WHITE,TFT_BLACK);
+        tft.setTextSize(1);
+        tft.print("Hello");
+        delay(1000);
     
-    tft.setTextColor(TFT_WHITE,TFT_BLACK);
-    tft.setTextSize(1);
-    tft.print("hello");
-    delay(2000);
+        tft.setCursor(0, 0, 2);
+        tft.setTextColor(TFT_BLACK,TFT_BLACK);
+        tft.print("Hello");
+    
+        tft.setTextColor(TFT_WHITE,TFT_BLACK);
+        tft.setCursor(0, 25, 2);
 
-    tft.setCursor(0, 0, 2);
-    tft.setTextColor(TFT_BLACK,TFT_BLACK);
-    tft.print("hello");
+    //Sensors init    
+        sensorsError = sensorsInit(tft);
+        barometer.begin();
+        si7021.setHumidityRes(12);
 
-    tft.setTextColor(TFT_WHITE,TFT_BLACK);
-    tft.setCursor(0, 25, 2);
-    sensorsError = sensorsInit(tft);
+    tft.setCursor(0, 110, 2);
+    if (! rtc.begin()) {
+        tft.println("Couldn't find RTC");
+    }
 
-    barometer.begin();
-    si7021.setHumidityRes(12);
-/*
     //SDCARD INITIALIZATION
-    String dataString = "#time(mil),CO(ppm),dust(mg/m3),temp(degC),pres(mmhg),hum";
+    String dataString = "#time,\tCO(ppm),\tdust(mg/m3)\t,temp(degC),pres(hPa),hum";
     //char warn[11] = "SD - OK";
     bool sderror = false;
     if (!SD.begin(chipSelect)) {
         //warn="SD - ERROR";
+        tft.println("SD ERROR");
         sderror = true;
     } else {
         File dataFile = SD.open("datalog.txt", FILE_WRITE);
         dataFile.println(dataString);
         dataFile.close();
+        tft.println("SD OK");
     }
+    
     //SDCARD END
-*/
+
 }
 
 void loop() {
+    
     time_cur = millis();
     int iter = 0;
     //int nsamp = 0;
-    double pressure_abs,humi,tempi,dusti,monoi;
+    double pressi,humi,tempi,dusti,monoi;
 
     //tft.println("***");
     //loading(tft);
-    //Reading data[DATLEN];
-    //Reading accumRead;
+    Reading data[DATLEN];
+    Reading accumRead;
+    Reading singleRead;
+    float monArray[150];
 
     if (time_cur - time_prev > dt){
         time_prev = time_cur;
-        nsamp>=150?nsamp=0:nsamp++;
+        nsamp>=TSAMP?nsamp=0:nsamp++;
 
-        tft.setCursor(0, 150, 2);
-        tft.setTextColor(TFT_BLACK,TFT_BLACK);
-        tft.print("Pressure: ");
-        tft.println(pressure_abs);
-        tft.print("Humidity: ");
-        tft.println(humi);
-        tft.print("Temperature: ");
-        tft.println(tempi);
-        tft.print("Dust: ");
-        tft.println(monoi);
-        tft.print(nsamp);
+            DateTime now = rtc.now();
+    
+    Serial.print(now.year(), DEC);
+    Serial.print('/');
+    Serial.print(now.month(), DEC);
+    Serial.print('/');
+    Serial.print(now.day(), DEC);
+    Serial.print(" (");
+    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
+    Serial.print(") ");
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.print(now.second(), DEC);
+    Serial.println();
+    
+    Serial.print(" since midnight 1/1/1970 = ");
+    Serial.print(now.unixtime());
+    Serial.print("s = ");
+    Serial.print(now.unixtime() / 86400L);
+    Serial.println("d");
 
-        pressure_abs  = barometer.getPressure(MODE_ULTRA);
-        humi = si7021.readHumidity();
-        tempi = si7021.readTemp();
-        dusti = getDust();
-        monoi = getMono(nsamp);
-        //pinMode(6,OUTPUT);
-        //digitalWrite(6,LOW);
+        //Display some data
+        /*
+            tft.setCursor(0, 150, 2);
+            tft.setTextColor(TFT_BLACK,TFT_BLACK);
+            tft.print("Pressure: ");
+            tft.println(pressi);
+            tft.print("Humidity: ");
+            tft.println(humi);
+            tft.print("Temperature: ");
+            tft.println(tempi);
+            tft.print("Dust: ");
+            tft.println(monoi);
+            tft.print(nsamp);
+            */
+            singleRead = getSensorsReadings(nsamp);
+            
+            pressi = singleRead.pres;
+            humi = singleRead.hum;
+            tempi = singleRead.temp;
+            dusti = singleRead.dust;
+            monoi = singleRead.mono;
+            monArray[nsamp] = monoi;
+            
+            tft.setCursor(0, 150, 2);
+            tft.setTextColor(TFT_WHITE,TFT_BLACK);
+            tft.print("Pressure: ");
+            tft.println(pressi);
+            tft.print("Humidity: ");
+            tft.println(humi);
+            tft.print("Temperature: ");
+            tft.println(tempi);
+            tft.print("Mono: ");
+            tft.println(monoi);
+            tft.print("Dust: ");
+            tft.println(dusti);
+            tft.print(nsamp);
 
-        tft.setTextColor(TFT_WHITE,TFT_BLACK);
-        tft.print("Pressure: ");
-        tft.println(pressure_abs);
-        tft.print("Humidity: ");
-        tft.println(humi);
-        tft.print("Temperature: ");
-        tft.println(tempi);
-        tft.print("Dust: ");
-        tft.println(monoi);
-        tft.print(nsamp);
-
-    /*
+        //drawSystem(tft,150,20,250,150,DKRED,YELLOW);
+        /*
+        double x,y;
+        Graph(tft, x, y, 1, 150, 250, 300, 200, 0, 6.5, 1, -1, 1, .25, "", "", "", display1, YELLOW);
+        update1 = true;
+        for (x = 0; x <= 6.3; x += .1) {
+            y = sin(x);
+            Trace(tft, x, y, 1, 150, 250, 300, 200, 0, 6.5, 1, -1, 1, .25, "Sin(x)", "x", "fn(x)", update1, YELLOW);
+        }
+        */
+    
         //sampling & collecting, 1000ms
-        Reading curread = getSensorsReadings();
+        //Reading curread = getSensorsReadings();
         
-        accumRead.mono += curread.mono;
-        accumRead.dust += curread.dust;
-        accumRead.temp += curread.temp;
-        accumRead.pres += curread.pres;
-        accumRead.hum += curread.hum;
-        if (nsamp >= 180){
+        accumRead.mono = accumRead.mono + singleRead.mono;
+        accumRead.dust = accumRead.dust + singleRead.dust;
+        accumRead.temp = accumRead.temp + singleRead.temp;
+        accumRead.pres = accumRead.pres + singleRead.pres;
+        accumRead.hum = accumRead.hum + singleRead.hum;
+
+        if (nsamp >= TSAMP){
             //averaging and storing to data[i];
-            float denom = (float)nsamp;
-            nsamp = 0;
-            accumRead.mono = accumRead.mono / denom;
-            accumRead.dust = accumRead.dust / denom;
-            accumRead.temp = accumRead.temp / denom;
-            accumRead.pres = accumRead.pres / denom;
-            accumRead.hum = accumRead.hum / denom;
+            //float denom = (float)TSAMP;
+
+            accumRead.mono = accumRead.mono / TSAMPF;
+            accumRead.dust = accumRead.dust / TSAMPF;
+            accumRead.temp = accumRead.temp / TSAMPF;
+            accumRead.pres = accumRead.pres / TSAMPF;
+            accumRead.hum = accumRead.hum / TSAMPF;
+
             data[iter] = accumRead;
             String dataString;
-            dataString = String(time_cur,DEC);
+            dataString = String(time_cur/1000,DEC);
             dataString += ",";
-            dataString += String(accumRead.mono,1);
+            dataString += String(singleRead.mono,1);
             dataString += ",";
-            dataString += String(accumRead.dust,3);
+            dataString += String(singleRead.dust,3);
             dataString += ",";
-            dataString += String(accumRead.temp,1);
+            dataString += String(singleRead.temp,1);
             dataString += ",";
-            dataString += String(accumRead.pres,1);
+            dataString += String(singleRead.pres,2);
             dataString += ",";
-            dataString += String(accumRead.hum,1);
-            File dataFile = SD.open("datalog.txt", FILE_WRITE);
+            dataString += String(singleRead.hum,1);
+            File dataFile = SD.open("today.txt", FILE_WRITE);
             dataFile.println(dataString);
             dataFile.close();
+            
             if (iter >= 4){
                 //json, send to esp
                 //json generating
-                
+                /*
                 StaticJsonBuffer<400> jsonBuffer;
                 JsonObject& root = jsonBuffer.createObject();
     
@@ -204,13 +487,13 @@ void loop() {
                 }
                 root.printTo(Serial);
                 Serial.println();
-                
+                */
                 
                 iter = 0;
             } else {
                 iter++;
             }
-        }*/
+        }
     }
 }
 
@@ -237,3 +520,4 @@ Reading avgReadings(Reading* array, int num){
 
     return acc;
 }
+

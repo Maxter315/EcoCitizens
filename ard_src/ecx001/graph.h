@@ -1,5 +1,7 @@
 /*Graph*/
-/*
+#include <stdint.h>
+#include <TFT_HX8357.h>
+
 #define LTBLUE    0xB6DF
 #define LTTEAL    0xBF5F
 #define LTGREEN   0xBFF7
@@ -20,7 +22,7 @@
 #define MAGENTA   0xF81F
 #define YELLOW    0xFFE0
 #define ORANGE    0xFC00
-#define PINK      0xF81F
+//#define PINK      0xF81F
 #define PURPLE    0x8010
 #define GREY      0xC618
 #define WHITE     0xFFFF
@@ -37,21 +39,5 @@
 #define DKPINK    0x9009
 #define DKPURPLE  0x4010
 #define DKGREY    0x4A49
-*/
-/*
-void Graph(void);
-  /*TFT_HX8357&, double, double, byte,
-                           double, double, double, double ,
-                           double , double , double ,
-                           double , double , double ,
-                           char *, char *, char *,
-                           boolean&, unsigned int );
-*/
-/*
-void Trace(TFT_HX8357&, double ,  double ,  byte ,
-           double , double ,
-           double , double ,
-           double , double , double ,
-           double , double , double ,
-           char *, char *, char *,
-           boolean&, unsigned int );*/
+
+void drawSystem (TFT_HX8357&, int16_t, int16_t, int16_t, int16_t, uint16_t, uint16_t);
