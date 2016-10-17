@@ -305,14 +305,13 @@ void setup() {
     }
 
     //SDCARD INITIALIZATION
-    String dataString = "#time,\tCO(ppm),\tdust(mg/m3)\t,temp(degC),pres(hPa),hum";
-    //char warn[11] = "SD - OK";
+    String dataString = "#time(HH:MM:SS),\tCO(ppm),\tdust(mg/m3),\ttemp(degC),\tpres(hPa),\thum(%)";
     bool sderror = false;
     if (!SD.begin(chipSelect)) {
-        //warn="SD - ERROR";
         tft.println("SD ERROR");
         sderror = true;
     } else {
+        SD.remove("datalog.txt") 
         File dataFile = SD.open("datalog.txt", FILE_WRITE);
         dataFile.println(dataString);
         dataFile.close();
@@ -321,6 +320,8 @@ void setup() {
     
     //SDCARD END
 
+        tft.setCursor(0, 0, 2);
+        tft.fillScreen(TFT_BLACK);
 }
 
 void loop() {
@@ -330,7 +331,6 @@ void loop() {
     //int nsamp = 0;
     double pressi,humi,tempi,dusti,monoi;
 
-    //tft.println("***");
     //loading(tft);
     Reading data[DATLEN];
     Reading accumRead;
@@ -342,7 +342,7 @@ void loop() {
         nsamp>=TSAMP?nsamp=0:nsamp++;
 
             DateTime now = rtc.now();
-    
+    /*
     Serial.print(now.year(), DEC);
     Serial.print('/');
     Serial.print(now.month(), DEC);
@@ -363,7 +363,7 @@ void loop() {
     Serial.print("s = ");
     Serial.print(now.unixtime() / 86400L);
     Serial.println("d");
-
+    */
         //Display some data
         /*
             tft.setCursor(0, 150, 2);
@@ -378,6 +378,14 @@ void loop() {
             tft.println(monoi);
             tft.print(nsamp);
             */
+
+            tft.print(now.year(), DEC);     tft.print('/');
+            tft.print(now.month(), DEC);    tft.print('/');
+            tft.print(now.day(), DEC);      tft.print(" ");
+            tft.print(now.hour(), DEC);     tft.print(':');
+            tft.print(now.minute(), DEC);   tft.print(':');
+            tft.println(now.second(), DEC);
+
             singleRead = getSensorsReadings(nsamp);
             
             pressi = singleRead.pres;
@@ -433,7 +441,10 @@ void loop() {
 
             data[iter] = accumRead;
             String dataString;
-            dataString = String(time_cur/1000,DEC);
+            //dataString = String(time_cur/1000,DEC);
+            dataString = String(now.hour(),DEC);    dataString += ":";
+            dataString += String(now.minute(),DEC);    dataString += ":";
+            dataString += String(now.second(),DEC);
             dataString += ",";
             dataString += String(singleRead.mono,1);
             dataString += ",";
