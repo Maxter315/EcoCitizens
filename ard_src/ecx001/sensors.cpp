@@ -115,13 +115,14 @@ float adcf;
     } else if(sec > 60){
         digitalWrite(MONOHEAT,HIGH);
     }
-adc = analogRead(MONOADC);
-adcf = adc * (5.0/1024.0);
 
+adc = analogRead(MONOADC); //debug
+adcf = adc * (5.0/1024.0);
 float res;
 float ratio;
 ratio = (5.0 - adcf) / adcf;
-res = -500 * (ratio*10/0.7) + 600;
+res = -500 * (ratio*10/1.5) + 600;
+if (res < 0.0) res = 0.0;
 //res = (float) adc;
 return res;
 }

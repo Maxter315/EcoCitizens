@@ -311,7 +311,7 @@ void setup() {
         tft.println("SD ERROR");
         sderror = true;
     } else {
-        SD.remove("datalog.txt") 
+        SD.remove("datalog.txt"); 
         File dataFile = SD.open("datalog.txt", FILE_WRITE);
         dataFile.println(dataString);
         dataFile.close();
@@ -319,7 +319,7 @@ void setup() {
     }
     
     //SDCARD END
-
+        delay(2000);
         tft.setCursor(0, 0, 2);
         tft.fillScreen(TFT_BLACK);
 }
@@ -378,13 +378,13 @@ void loop() {
             tft.println(monoi);
             tft.print(nsamp);
             */
-
+            tft.setCursor(0, 10, 2);
             tft.print(now.year(), DEC);     tft.print('/');
-            tft.print(now.month(), DEC);    tft.print('/');
-            tft.print(now.day(), DEC);      tft.print(" ");
-            tft.print(now.hour(), DEC);     tft.print(':');
-            tft.print(now.minute(), DEC);   tft.print(':');
-            tft.println(now.second(), DEC);
+            tft.print(addzero(now.month()));    tft.print('/');
+            tft.print(addzero(now.day()));      tft.print(" ");
+            tft.print(addzero(now.hour()));     tft.print(':');
+            tft.print(addzero(now.minute()));   tft.print(':');
+            tft.println(addzero(now.second()));
 
             singleRead = getSensorsReadings(nsamp);
             
@@ -395,7 +395,7 @@ void loop() {
             monoi = singleRead.mono;
             monArray[nsamp] = monoi;
             
-            tft.setCursor(0, 150, 2);
+            
             tft.setTextColor(TFT_WHITE,TFT_BLACK);
             tft.print("Pressure: ");
             tft.println(pressi);
@@ -407,7 +407,7 @@ void loop() {
             tft.println(monoi);
             tft.print("Dust: ");
             tft.println(dusti);
-            tft.print(nsamp);
+            tft.println(nsamp);
 
         //drawSystem(tft,150,20,250,150,DKRED,YELLOW);
         /*
@@ -440,11 +440,15 @@ void loop() {
             accumRead.hum = accumRead.hum / TSAMPF;
 
             data[iter] = accumRead;
+            String temp;
             String dataString;
+            temp = String(now.year(),DEC);       //temp += "_";
+            temp += addzero(now.month());       //temp += "_";
+            temp += addzero(now.day());       temp += ".csv";
             //dataString = String(time_cur/1000,DEC);
-            dataString = String(now.hour(),DEC);    dataString += ":";
-            dataString += String(now.minute(),DEC);    dataString += ":";
-            dataString += String(now.second(),DEC);
+            dataString = addzero(now.hour());    dataString += ":";
+            dataString += addzero(now.minute());    dataString += ":";
+            dataString += addzero(now.second());
             dataString += ",";
             dataString += String(singleRead.mono,1);
             dataString += ",";
@@ -455,7 +459,12 @@ void loop() {
             dataString += String(singleRead.pres,2);
             dataString += ",";
             dataString += String(singleRead.hum,1);
-            File dataFile = SD.open("today.txt", FILE_WRITE);
+            //tft.println(filename);
+            //filename = "test.txt";
+            char filename[16]="20160101.csv";
+            temp.toCharArray(filename,sizeof(filename));
+            tft.println(filename);
+            File dataFile = SD.open(filename, FILE_WRITE);
             dataFile.println(dataString);
             dataFile.close();
             
@@ -532,3 +541,13 @@ Reading avgReadings(Reading* array, int num){
     return acc;
 }
 
+String addzero(int a){
+    String out;
+    if (a<10) {
+        out = "0";
+        out += String(a,DEC);
+    }else{
+        out = String(a,DEC);
+    }
+return out;
+}
