@@ -1,8 +1,8 @@
 #define VERSION 001
 #define TEST 1
 #define DELTATIME 1000
-#define TSAMP 150
-#define TSAMPF 150.0
+#define TSAMP 15
+#define TSAMPF 15.0
 #define DATLEN 5
 
 #define SENSOR_ID "UA-KR-0001"
@@ -14,7 +14,7 @@
 //#include <aJSON.h>
 #include <SD.h>
 #include <SPI.h>
-//#include <ArduinoJson.h>
+#include <ArduinoJson.h>
 //#include <stdint.h>
 #include "sensors.h"
 #include "graph.h"
@@ -271,12 +271,14 @@ SI7021 si7021;
 T5403 barometer(MODE_I2C);
 
 uint16_t sensorsError = 0;
-uint8_t nsamp = 0;
+uint8_t nsamp = 0, iter = 0;
 unsigned long time_cur, time_prev;
 unsigned long dt = DELTATIME;
 
 void setup() {
     //Display initialization
+        Serial.begin(9600);
+        Serial.println("setup");
         tft.init();
         tft.setRotation(1);
         tft.setCursor(0, 0, 2);
@@ -327,7 +329,7 @@ void setup() {
 void loop() {
     
     time_cur = millis();
-    int iter = 0;
+    //int iter = 0;
     //int nsamp = 0;
     double pressi,humi,tempi,dusti,monoi;
 
@@ -345,14 +347,6 @@ void loop() {
         //Display some data
             tft.setCursor(0, 10, 2);
             tft.println(getTimeString(now));
-
-            /*
-            tft.print(now.year(), DEC);     tft.print('/');
-            tft.print(addzero(now.month()));    tft.print('/');
-            tft.print(addzero(now.day()));      tft.print(" ");
-            tft.print(addzero(now.hour()));     tft.print(':');
-            tft.print(addzero(now.minute()));   tft.print(':');
-            tft.println(addzero(now.second()));*/
 
             singleRead = getSensorsReadings(nsamp);
             /*
@@ -377,6 +371,7 @@ void loop() {
             tft.println(singleRead.dust);
 
             tft.println(nsamp);
+            tft.println(iter);
 
         //drawSystem(tft,150,20,250,150,DKRED,YELLOW);
         /*
@@ -408,7 +403,7 @@ void loop() {
             accumRead.pres = accumRead.pres / TSAMPF;
             accumRead.hum = accumRead.hum / TSAMPF;
 
-            data[iter] = accumRead;
+            data[iter] = singleRead;
             String temp;
             String dataString;
             temp = String(now.year(),DEC);       //temp += "_";
@@ -440,8 +435,9 @@ void loop() {
             if (iter >= 4){
                 //json, send to esp
                 //json generating
-                /*
-                StaticJsonBuffer<400> jsonBuffer;
+                Serial.println("json starts here:");
+                
+                StaticJsonBuffer<800> jsonBuffer;
                 JsonObject& root = jsonBuffer.createObject();
     
                 root["id"] = SENSOR_ID;
@@ -451,8 +447,8 @@ void loop() {
                 root["date"] = "2016-01-01";
                 root["time"] = "13:00:01";
                 root["err"] = sensorsError;
-                root["tsamp"] = 180;
-                root["samples"] = 5;
+                root["tsamp"] = TSAMP;
+                root["samples"] = DATLEN;
                 JsonArray& read_j = root.createNestedArray("readings");
                     JsonObject& mono_o = read_j.createNestedObject();
                     JsonObject& dust_o = read_j.createNestedObject();
@@ -468,15 +464,15 @@ void loop() {
                 JsonArray& ahum = hum_o.createNestedArray("hum");
     
                 for (int i=0;i<5;i++){
-                    amono.add(double_with_n_digits(data[i].mono, 1));
-                    adust.add(double_with_n_digits(data[i].dust, 1));
-                    atemp.add(double_with_n_digits(data[i].temp, 1));
-                    apres.add(double_with_n_digits(data[i].pres, 1));
-                    ahum.add(double_with_n_digits(data[i].hum, 1));
+                    amono.add(double_with_n_digits(data[i].mono, 2));
+                    adust.add(double_with_n_digits(data[i].dust, 2));
+                    atemp.add(double_with_n_digits(data[i].temp, 2));
+                    apres.add(double_with_n_digits(data[i].pres, 2));
+                    ahum.add(double_with_n_digits(data[i].hum, 2));
                 }
                 root.printTo(Serial);
                 Serial.println();
-                */
+                
                 
                 iter = 0;
             } else {
