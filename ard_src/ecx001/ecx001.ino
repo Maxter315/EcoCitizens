@@ -342,71 +342,40 @@ void loop() {
         nsamp>=TSAMP?nsamp=0:nsamp++;
 
             DateTime now = rtc.now();
-    /*
-    Serial.print(now.year(), DEC);
-    Serial.print('/');
-    Serial.print(now.month(), DEC);
-    Serial.print('/');
-    Serial.print(now.day(), DEC);
-    Serial.print(" (");
-    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
-    Serial.print(") ");
-    Serial.print(now.hour(), DEC);
-    Serial.print(':');
-    Serial.print(now.minute(), DEC);
-    Serial.print(':');
-    Serial.print(now.second(), DEC);
-    Serial.println();
-    
-    Serial.print(" since midnight 1/1/1970 = ");
-    Serial.print(now.unixtime());
-    Serial.print("s = ");
-    Serial.print(now.unixtime() / 86400L);
-    Serial.println("d");
-    */
         //Display some data
-        /*
-            tft.setCursor(0, 150, 2);
-            tft.setTextColor(TFT_BLACK,TFT_BLACK);
-            tft.print("Pressure: ");
-            tft.println(pressi);
-            tft.print("Humidity: ");
-            tft.println(humi);
-            tft.print("Temperature: ");
-            tft.println(tempi);
-            tft.print("Dust: ");
-            tft.println(monoi);
-            tft.print(nsamp);
-            */
             tft.setCursor(0, 10, 2);
+            tft.println(getTimeString(now));
+
+            /*
             tft.print(now.year(), DEC);     tft.print('/');
             tft.print(addzero(now.month()));    tft.print('/');
             tft.print(addzero(now.day()));      tft.print(" ");
             tft.print(addzero(now.hour()));     tft.print(':');
             tft.print(addzero(now.minute()));   tft.print(':');
-            tft.println(addzero(now.second()));
+            tft.println(addzero(now.second()));*/
 
             singleRead = getSensorsReadings(nsamp);
-            
+            /*
             pressi = singleRead.pres;
             humi = singleRead.hum;
             tempi = singleRead.temp;
             dusti = singleRead.dust;
             monoi = singleRead.mono;
             monArray[nsamp] = monoi;
-            
+            */
             
             tft.setTextColor(TFT_WHITE,TFT_BLACK);
             tft.print("Pressure: ");
-            tft.println(pressi);
+            tft.println(singleRead.pres);
             tft.print("Humidity: ");
-            tft.println(humi);
+            tft.println(singleRead.hum);
             tft.print("Temperature: ");
-            tft.println(tempi);
+            tft.println(singleRead.temp);
             tft.print("Mono: ");
-            tft.println(monoi);
+            tft.println(singleRead.mono);
             tft.print("Dust: ");
-            tft.println(dusti);
+            tft.println(singleRead.dust);
+
             tft.println(nsamp);
 
         //drawSystem(tft,150,20,250,150,DKRED,YELLOW);
@@ -543,11 +512,23 @@ Reading avgReadings(Reading* array, int num){
 
 String addzero(int a){
     String out;
-    if (a<10) {
+    if (a < 10) {
         out = "0";
-        out += String(a,DEC);
+        out += String(a, DEC);
     }else{
-        out = String(a,DEC);
+        out = String(a, DEC);
     }
 return out;
+}
+
+String getTimeString(DateTime now){
+    String out;
+    out = String(now.year(), DEC);      out += '/';
+    out += addzero(now.month());        out += '/';
+    out += addzero(now.day());          out += ' ';
+    out += addzero(now.hour());         out += ':';
+    out += addzero(now.minute());       out += ':';
+    out += addzero(now.second());
+
+    return out;
 }
