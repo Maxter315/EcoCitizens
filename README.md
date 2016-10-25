@@ -30,7 +30,7 @@ EGAP challenge.<br>
             "temp":[24.5,25.0,26.0,28.4,31.5]       //temperature, [degC], Si7021/T5403
         },
         {
-            "pres":[1000.0,999.0,998.0,998.5,999.1]            //air pressure, [hPa], T5403
+            "pres":[100000,99900,99800,99850,99910]            //air pressure, [Pa], T5403
         },
         {
             "hum":[80.0,90.5,80.0,85.2,81.1]                  //relative humidity, [%], Si7021
