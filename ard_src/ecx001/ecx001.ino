@@ -1,11 +1,13 @@
 #define VERSION 001
-#define TEST 1
 #define DELTATIME 1000
+//!!debug!! TSAMP = 150
 #define TSAMP 15
 #define TSAMPF 15.0
 #define DATLEN 5
 
 #define SENSOR_ID "UA-KR-0001"
+#define LOC_LONG (48.756080)
+#define LOC_LAT (2.302038)
 
 #include <Arduino.h>
 //#include <Time.h>
@@ -24,8 +26,6 @@ RTC_DS1307 rtc;
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 const int chipSelect = 53;
-
-Reading avgReadings(Reading*, int);
 
 void loading(TFT_HX8357 &tft){
     for(int i=0;i<10;i++){
@@ -272,104 +272,76 @@ T5403 barometer(MODE_I2C);
 
 uint16_t sensorsError = 0;
 uint8_t nsamp = 0, iter = 0;
-unsigned long time_cur, time_prev;
+unsigned long currentTime, prevTime;
 unsigned long dt = DELTATIME;
 
 void setup() {
-    //Display initialization
+
         Serial.begin(9600);
-        Serial.println("setup");
+        Serial.println("Serial OK");
+    
+    //Display initialization
         tft.init();
         tft.setRotation(1);
         tft.setCursor(0, 0, 2);
         tft.fillScreen(TFT_BLACK);
-        
-        tft.setTextColor(TFT_WHITE,TFT_BLACK);
         tft.setTextSize(1);
-        tft.print("Hello");
-        delay(1000);
-    
-        tft.setCursor(0, 0, 2);
-        tft.setTextColor(TFT_BLACK,TFT_BLACK);
-        tft.print("Hello");
-    
         tft.setTextColor(TFT_WHITE,TFT_BLACK);
-        tft.setCursor(0, 25, 2);
+
+        //tft.setCursor(0, 25, 2);
 
     //Sensors init    
         sensorsError = sensorsInit(tft);
         barometer.begin();
         si7021.setHumidityRes(12);
-
-    tft.setCursor(0, 110, 2);
-    if (! rtc.begin()) {
-        tft.println("Couldn't find RTC");
-    }
+        //tft.setCursor(0, 110, 2);
+        if (! rtc.begin()) {
+            tft.println("Couldn't find RTC");
+        } else {
+            tft.println("RTC OK");
+        }
 
     //SDCARD INITIALIZATION
-    String dataString = "#time(HH:MM:SS),\tCO(ppm),\tdust(mg/m3),\ttemp(degC),\tpres(hPa),\thum(%)";
-    bool sderror = false;
-    if (!SD.begin(chipSelect)) {
-        tft.println("SD ERROR");
-        sderror = true;
-    } else {
-        SD.remove("datalog.txt"); 
-        File dataFile = SD.open("datalog.txt", FILE_WRITE);
-        dataFile.println(dataString);
-        dataFile.close();
-        tft.println("SD OK");
-    }
+        String dataString = "#time(HH:MM:SS),\tCO(ppm),\tdust(mg/m3),\ttemp(degC),\tpres(Pa),\thum(%)";
+        bool sderror = false;
+        if (!SD.begin(chipSelect)) {
+            tft.println("SD ERROR");
+            sderror = true;
+        } else {
+            SD.remove("datalog.txt"); 
+            File dataFile = SD.open("datalog.txt", FILE_WRITE);
+            dataFile.println(dataString);
+            dataFile.close();
+            tft.println("SD OK");
+        }
     
-    //SDCARD END
-        delay(2000);
-        tft.setCursor(0, 0, 2);
-        tft.fillScreen(TFT_BLACK);
+    delay(2000);
+    tft.setCursor(0, 0, 2);
+    tft.fillScreen(TFT_BLACK);
 }
 
 void loop() {
-    
-    time_cur = millis();
-    //int iter = 0;
-    //int nsamp = 0;
-    double pressi,humi,tempi,dusti,monoi;
 
-    //loading(tft);
     Reading data[DATLEN];
     Reading accumRead;
     Reading singleRead;
     float monArray[150];
+    DateTime timeOfFirstRead;
 
-    if (time_cur - time_prev > dt){
-        time_prev = time_cur;
-        nsamp>=TSAMP?nsamp=0:nsamp++;
+    currentTime = millis();
 
-            DateTime now = rtc.now();
+    if (currentTime - prevTime > dt){
+        prevTime = currentTime;
+        nsamp>=TSAMP? nsamp=0 : nsamp++;
+
+        DateTime now = rtc.now();
+        
         //Display some data
-            tft.setCursor(0, 10, 2);
+            tft.setCursor(0, 0, 2);
             tft.println(getTimeString(now));
 
             singleRead = getSensorsReadings(nsamp);
-            /*
-            pressi = singleRead.pres;
-            humi = singleRead.hum;
-            tempi = singleRead.temp;
-            dusti = singleRead.dust;
-            monoi = singleRead.mono;
-            monArray[nsamp] = monoi;
-            */
-            
-            tft.setTextColor(TFT_WHITE,TFT_BLACK);
-            tft.print("Pressure: ");
-            tft.println(singleRead.pres);
-            tft.print("Humidity: ");
-            tft.println(singleRead.hum);
-            tft.print("Temperature: ");
-            tft.println(singleRead.temp);
-            tft.print("Mono: ");
-            tft.println(singleRead.mono);
-            tft.print("Dust: ");
-            tft.println(singleRead.dust);
-
+            displayInfo(tft, singleRead, 0);
             tft.println(nsamp);
             tft.println(iter);
 
@@ -383,9 +355,6 @@ void loop() {
             Trace(tft, x, y, 1, 150, 250, 300, 200, 0, 6.5, 1, -1, 1, .25, "Sin(x)", "x", "fn(x)", update1, YELLOW);
         }
         */
-    
-        //sampling & collecting, 1000ms
-        //Reading curread = getSensorsReadings();
         
         accumRead.mono = accumRead.mono + singleRead.mono;
         accumRead.dust = accumRead.dust + singleRead.dust;
@@ -396,6 +365,7 @@ void loop() {
         if (nsamp >= TSAMP){
             //averaging and storing to data[i];
             //float denom = (float)TSAMP;
+            if (iter == 0) timeOfFirstRead = rtc.now();
 
             accumRead.mono = accumRead.mono / TSAMPF;
             accumRead.dust = accumRead.dust / TSAMPF;
@@ -404,27 +374,10 @@ void loop() {
             accumRead.hum = accumRead.hum / TSAMPF;
 
             data[iter] = singleRead;
-            String temp;
-            String dataString;
-            temp = String(now.year(),DEC);       //temp += "_";
-            temp += addzero(now.month());       //temp += "_";
-            temp += addzero(now.day());       temp += ".csv";
-            //dataString = String(time_cur/1000,DEC);
-            dataString = addzero(now.hour());    dataString += ":";
-            dataString += addzero(now.minute());    dataString += ":";
-            dataString += addzero(now.second());
-            dataString += ",";
-            dataString += String(singleRead.mono,1);
-            dataString += ",";
-            dataString += String(singleRead.dust,3);
-            dataString += ",";
-            dataString += String(singleRead.temp,1);
-            dataString += ",";
-            dataString += String(singleRead.pres,2);
-            dataString += ",";
-            dataString += String(singleRead.hum,1);
-            //tft.println(filename);
-            //filename = "test.txt";
+
+            String dataString = genDatalog(now, singleRead);
+            String temp = genFilename(now);
+
             char filename[16]="20160101.csv";
             temp.toCharArray(filename,sizeof(filename));
             tft.println(filename);
@@ -435,17 +388,17 @@ void loop() {
             if (iter >= 4){
                 //json, send to esp
                 //json generating
-                Serial.println("json starts here:");
+                //Serial.println("json starts here:");
                 
                 StaticJsonBuffer<800> jsonBuffer;
                 JsonObject& root = jsonBuffer.createObject();
     
                 root["id"] = SENSOR_ID;
                 JsonArray& loc = root.createNestedArray("location");
-                    loc.add(double_with_n_digits(48.756080, 6));
-                    loc.add(double_with_n_digits(2.302038, 6));
-                root["date"] = "2016-01-01";
-                root["time"] = "13:00:01";
+                    loc.add(double_with_n_digits(LOC_LONG, 6));
+                    loc.add(double_with_n_digits(LOC_LAT, 6));
+                root["date"] = getDateJ(timeOfFirstRead);
+                root["time"] = getTimeJ(timeOfFirstRead);
                 root["err"] = sensorsError;
                 root["tsamp"] = TSAMP;
                 root["samples"] = DATLEN;
@@ -464,15 +417,14 @@ void loop() {
                 JsonArray& ahum = hum_o.createNestedArray("hum");
     
                 for (int i=0;i<5;i++){
-                    amono.add(double_with_n_digits(data[i].mono, 2));
-                    adust.add(double_with_n_digits(data[i].dust, 2));
+                    amono.add(double_with_n_digits(data[i].mono, 1));
+                    adust.add(double_with_n_digits(data[i].dust, 3));
                     atemp.add(double_with_n_digits(data[i].temp, 2));
-                    apres.add(double_with_n_digits(data[i].pres, 2));
+                    apres.add(double_with_n_digits(data[i].pres, 1));
                     ahum.add(double_with_n_digits(data[i].hum, 2));
                 }
                 root.printTo(Serial);
                 Serial.println();
-                
                 
                 iter = 0;
             } else {
@@ -483,28 +435,6 @@ void loop() {
 }
 
 /*============================================================================*/
-Reading avgReadings(Reading* array, int num){
-
-    Reading acc;
-
-    for(int i=0; i<num; i++){
-        acc.mono += array[i].mono;
-        acc.dust += array[i].dust;
-        acc.temp += array[i].temp;
-        acc.pres += array[i].pres;
-        acc.hum += array[i].hum;
-    }
-
-    float denom = (float)num;
-
-    acc.mono = acc.mono / denom;
-    acc.dust = acc.dust / denom;
-    acc.temp = acc.temp / denom;
-    acc.pres = acc.pres / denom;
-    acc.hum = acc.hum / denom;
-
-    return acc;
-}
 
 String addzero(int a){
     String out;
@@ -527,4 +457,58 @@ String getTimeString(DateTime now){
     out += addzero(now.second());
 
     return out;
+}
+
+String getTimeJ(DateTime now){
+    String out;
+    out = addzero(now.hour());          out += ':';
+    out += addzero(now.minute());       out += ':';
+    out += addzero(now.second());
+    return out;
+}
+
+String getDateJ(DateTime now){
+    String out;
+    out = String(now.year(), DEC);      out += '-';
+    out += addzero(now.month());        out += '-';
+    out += addzero(now.day());
+    return out;
+}
+
+String genFilename(DateTime now){
+    String out;
+    out = String(now.year(), DEC);
+    out += addzero(now.month());
+    out += addzero(now.day());
+    out += ".csv";
+    return out;
+}
+
+String genDatalog(DateTime now, Reading sample){
+    String out;
+
+    out = addzero(now.hour());              out += ":";
+    out += addzero(now.minute());           out += ":";
+    out += addzero(now.second());           out += ",";
+
+    out += String(sample.mono,1);           out += ",";
+    out += String(sample.dust,3);           out += ",";
+    out += String(sample.temp,1);           out += ",";
+    out += String(sample.pres/100.0,2);     out += ",";
+    out += String(sample.hum,1);
+    return out;
+}
+
+void displayInfo(TFT_HX8357& tft, Reading sample, uint8_t pos){
+    tft.setTextColor(TFT_WHITE,TFT_BLACK);
+    tft.print("Pressure: ");
+    tft.println(sample.pres);
+    tft.print("Humidity: ");
+    tft.println(sample.hum);
+    tft.print("Temperature: ");
+    tft.println(sample.temp);
+    tft.print("Mono: ");
+    tft.println(sample.mono);
+    tft.print("Dust: ");
+    tft.println(sample.dust);
 }
