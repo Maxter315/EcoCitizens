@@ -81,7 +81,7 @@ Reading getSensorsReadings(uint8_t sec){
     data.mono = getMono(sec);
     data.dust = getDust();
     data.temp = si7021.readTemp();
-    data.pres = barometer.getPressure(MODE_ULTRA)/100.0;
+    data.pres = barometer.getPressure(MODE_ULTRA);
     data.hum = si7021.readHumidity();
 
     return data;
