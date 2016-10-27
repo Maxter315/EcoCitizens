@@ -1,8 +1,8 @@
 #define VERSION 001
 #define DELTATIME 1000
 //!!debug!! TSAMP = 150
-#define TSAMP 15
-#define TSAMPF 15.0
+#define TSAMP 150
+#define TSAMPF 150.0
 #define DATLEN 5
 
 #define SENSOR_ID "UA-KR-0001"
@@ -279,6 +279,8 @@ void setup() {
 
         Serial.begin(9600);
         Serial.println("Serial OK");
+
+        Serial3.begin(115200);
     
     //Display initialization
         tft.init();
@@ -430,7 +432,12 @@ void loop() {
             } else {
                 iter++;
             }
+
+
         }
+
+        String temps = Serial3.readString();
+        tft.println(temps);
     }
 }
 

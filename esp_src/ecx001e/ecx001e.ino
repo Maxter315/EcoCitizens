@@ -39,7 +39,8 @@ void loop() {
         USE_SERIAL.print("[HTTP] begin...\n");
 
         // configure server and url
-        http.begin("http://192.168.1.12/test.html");
+        //http.begin("http://192.168.1.12/test.html");
+        http.begin("http://ecocitizens.online/user/controller/importParameters.php");
         //http.begin("192.168.1.12", 80, "/test.html");
 
         USE_SERIAL.print("[HTTP] GET...\n");
