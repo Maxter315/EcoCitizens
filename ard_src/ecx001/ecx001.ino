@@ -1,8 +1,8 @@
 #define VERSION 001
 #define DELTATIME 1000
 //!!debug!! TSAMP = 150
-#define TSAMP 150
-#define TSAMPF 150.0
+#define TSAMP 15
+#define TSAMPF 15.0
 #define DATLEN 5
 
 #define SENSOR_ID "UA-KR-0001"
@@ -274,13 +274,14 @@ uint16_t sensorsError = 0;
 uint8_t nsamp = 0, iter = 0;
 unsigned long currentTime, prevTime;
 unsigned long dt = DELTATIME;
+DateTime timeOfFirstRead;
 
 void setup() {
 
         Serial.begin(9600);
         Serial.println("Serial OK");
-
         Serial3.begin(115200);
+        Serial3.setTimeout(50);
     
     //Display initialization
         tft.init();
@@ -328,11 +329,13 @@ void loop() {
     Reading accumRead;
     Reading singleRead;
     float monArray[150];
-    DateTime timeOfFirstRead;
+    
 
     currentTime = millis();
 
     if (currentTime - prevTime > dt){
+        //tft.fillScreen(TFT_BLACK);
+
         prevTime = currentTime;
         nsamp>=TSAMP? nsamp=0 : nsamp++;
 
@@ -341,6 +344,7 @@ void loop() {
         //Display some data
             tft.setCursor(0, 0, 2);
             tft.println(getTimeString(now));
+            tft.println(getTimeString(timeOfFirstRead));
 
             singleRead = getSensorsReadings(nsamp);
             displayInfo(tft, singleRead, 0);
@@ -367,7 +371,9 @@ void loop() {
         if (nsamp >= TSAMP){
             //averaging and storing to data[i];
             //float denom = (float)TSAMP;
-            if (iter == 0) timeOfFirstRead = rtc.now();
+            if (iter == 0) {
+                timeOfFirstRead = rtc.now();
+            }
 
             accumRead.mono = accumRead.mono / TSAMPF;
             accumRead.dust = accumRead.dust / TSAMPF;
@@ -425,8 +431,8 @@ void loop() {
                     apres.add(double_with_n_digits(data[i].pres, 1));
                     ahum.add(double_with_n_digits(data[i].hum, 2));
                 }
-                root.printTo(Serial);
-                Serial.println();
+                root.printTo(Serial3);
+                Serial3.println();
                 
                 iter = 0;
             } else {
