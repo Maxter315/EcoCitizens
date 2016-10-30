@@ -357,7 +357,7 @@ void loop() {
         Graph(tft, x, y, 1, 150, 250, 300, 200, 0, 6.5, 1, -1, 1, .25, "", "", "", display1, YELLOW);
         update1 = true;
         for (x = 0; x <= 6.3; x += .1) {
-            y = sin(x);
+            y = nsamp*sin(x);
             Trace(tft, x, y, 1, 150, 250, 300, 200, 0, 6.5, 1, -1, 1, .25, "Sin(x)", "x", "fn(x)", update1, YELLOW);
         }
         */

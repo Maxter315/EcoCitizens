@@ -11,7 +11,7 @@
 #include <TFT_HX8357.h>
 
 /* returns error code */
-uint16_t sensorsInit(TFT_HX8357);
+uint16_t sensorsInit(TFT_HX8357 &);
 
 float getMono(uint8_t);
 float getDust();

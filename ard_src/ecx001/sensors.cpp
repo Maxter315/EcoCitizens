@@ -15,7 +15,7 @@
 #define MONOHEAT 6
 //extern TFT_HX8357 tft;
 
-uint16_t sensorsInit(TFT_HX8357 tft){
+uint16_t sensorsInit(TFT_HX8357 &tft){
     uint16_t error = 0x00;
     extern SI7021 si7021;
     T5403 barometer(MODE_I2C);
@@ -38,7 +38,7 @@ uint16_t sensorsInit(TFT_HX8357 tft){
         barometer.begin();
         double pressure_abs  = barometer.getPressure(MODE_ULTRA);
         delay(DELAYL);
-        if(pressure_abs != 0.0){
+        if((pressure_abs > 90000.0) && (pressure_abs < 110000.0)){
             tft.println("OK");
         }else{
             tft.println("FAIL");
@@ -69,7 +69,7 @@ uint16_t sensorsInit(TFT_HX8357 tft){
         delay(DELAYS);
 
     tft.print("ERROR CODE: ");
-    tft.print((long)error,HEX);
+    tft.println((long)error,HEX);
     return error;
 }
 
