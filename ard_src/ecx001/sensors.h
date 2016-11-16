@@ -8,16 +8,33 @@
 #include <Wire.h>
 #include <Si7021.h>
 #include <t5403.h>
-
 #include <TFT_HX8357.h>
 
 /* returns error code */
-uint16_t sensorsInit(TFT_HX8357);
+uint16_t sensorsInit(TFT_HX8357 &);
 
-//float getMono(void);
-//float getDust(void);
-//float getTemp(void);
-float getPres(void);
-//float getHum(void);
+float getMono(uint8_t);
+float getDust();
+//float getTemp(SI7021);
+//float getPres(T5403);
+//float getHum(SI7021);
 
-//Reading getSensorsReadings(void);
+/* Structures */
+/*
+typedef struct{
+    float mono;
+    float dust;
+    float temp;
+    float pres;
+    float hum;
+}Reading;
+*/
+struct Reading{
+    float mono;
+    float dust;
+    float temp;
+    float pres;
+    float hum;
+};
+
+Reading getSensorsReadings(uint8_t);

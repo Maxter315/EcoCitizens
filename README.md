@@ -17,11 +17,11 @@ EGAP challenge.<br>
     "date":"2016-09-09",                //date and time when first reading was performed
     "time":"09:13:45",
     "err":0,                            //an error code 
-    "tsamp":180,                        //a time between readings in seconds
+    "tsamp":150,                        //a time between readings in seconds
     "samples":5,                        //an amount of readings 
     "readings":[
         {
-            "mono":[398,399,450,484,500]            //concentration of carbon monoxide, [ppm], MQ-7B
+            "mono":[398.0,399.0,450.0,484.0,500.0]            //concentration of carbon monoxide, [ppm], MQ-7B
         },
         {
             "dust":[0.011,0.015,0.018,0.02,0.03]    //concentrarion of dust, [mg/m3], GP2Y10
@@ -30,10 +30,10 @@ EGAP challenge.<br>
             "temp":[24.5,25.0,26.0,28.4,31.5]       //temperature, [degC], Si7021/T5403
         },
         {
-            "pres":[760,764,762,759,761]            //air pressure, [mmhg], T5403
+            "pres":[100000,99900,99800,99850,99910]            //air pressure, [Pa], T5403
         },
         {
-            "hum":[80,90,80,85,81]                  //relative humidity, [%], Si7021
+            "hum":[80.0,90.5,80.0,85.2,81.1]                  //relative humidity, [%], Si7021
         }
     ]
 }
