@@ -298,11 +298,14 @@ void setup() {
         barometer.begin();
         si7021.setHumidityRes(12);
         //tft.setCursor(0, 110, 2);
+
         if (! rtc.begin()) {
             tft.println("Couldn't find RTC");
         } else {
             tft.println("RTC OK");
         }
+    //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+
 
     //SDCARD INITIALIZATION
         String dataString = "#time(HH:MM:SS),\tCO(ppm),\tdust(mg/m3),\ttemp(degC),\tpres(Pa),\thum(%)";
@@ -431,8 +434,8 @@ void loop() {
                     apres.add(double_with_n_digits(data[i].pres, 1));
                     ahum.add(double_with_n_digits(data[i].hum, 2));
                 }
-                root.printTo(Serial3);
-                Serial3.println();
+                //root.printTo(Serial3);
+                //Serial3.println();
                 
                 iter = 0;
             } else {
@@ -442,8 +445,8 @@ void loop() {
 
         }
 
-        String temps = Serial3.readString();
-        tft.println(temps);
+        //String temps = Serial3.readString();
+        //tft.println(temps);
     }
 }
 
