@@ -332,8 +332,9 @@ void loop() {
     Reading accumRead;
     Reading singleRead;
     float monArray[150];
-    
+    DateTime now;
 
+    now = rtc.now();
     currentTime = millis();
 
     if (currentTime - prevTime > dt){
@@ -342,7 +343,10 @@ void loop() {
         prevTime = currentTime;
         nsamp>=TSAMP? nsamp=0 : nsamp++;
 
-        DateTime now = rtc.now();
+        if (!(nsamp % 5)){
+            now = rtc.now();
+        }
+        //DateTime now = rtc.now();
         
         //Display some data
             tft.setCursor(0, 0, 2);
