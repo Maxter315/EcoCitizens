@@ -37,35 +37,38 @@ void loop() {
     // wait for WiFi connection
     if((WiFiMulti.run() == WL_CONNECTED)) {
 
-        String sensorsData;
-        sensorsData = USE_SERIAL.readStringUntil('\n');
+        if(USE_SERIAL.available()){
+            String sensorsData;
+            sensorsData = USE_SERIAL.readStringUntil('\n');
 
-        USE_SERIAL.print(var);
-        var++;
-        HTTPClient http;
+            HTTPClient http;
 
-        //USE_SERIAL.print("     [HTTP] begin...\n");
+            //USE_SERIAL.print("     [HTTP] begin...\n");
+    
+            // configure server and url
+            //http.begin("http://192.168.1.12/test.html");
+            //http.begin("http://ecocitizens.online/user/controller/importParameters.php");
+            http.begin("31.131.22.224", 8880, "");
+    
+            //USE_SERIAL.print("[HTTP] POST...\n");
+            // start connection and send HTTP header
+            int httpCode = http.POST(sensorsData);
+            if(httpCode > 0) {
+                // HTTP header has been send and Server response header has been handled
+                USE_SERIAL.printf("[HTTP] POST... code: %d\n", httpCode);
+    
+            } else {
+                USE_SERIAL.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
+            }
 
-        // configure server and url
-        //http.begin("http://192.168.1.12/test.html");
-        http.begin("http://ecocitizens.online/user/controller/importParameters.php");
-        //http.begin("192.168.1.12", 80, "/test.html");
-
-        //USE_SERIAL.print("[HTTP] POST...\n");
-        // start connection and send HTTP header
-        int httpCode = http.POST(sensorsData);
-        if(httpCode > 0) {
-            // HTTP header has been send and Server response header has been handled
-            USE_SERIAL.printf("[HTTP] POST... code: %d\n", httpCode);
-
-        } else {
-            USE_SERIAL.printf("[HTTP] POST... failed, error: %s\n", http.errorToString(httpCode).c_str());
+            http.end();
+            USE_SERIAL.print(sensorsData);
+        }else{
+            USE_SERIAL.println(var);
+            var++;
         }
-
-        http.end();
-        USE_SERIAL.print(sensorsData);
+        delay(50);
     }
-
     delay(1000);
 }
 
