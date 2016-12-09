@@ -23,7 +23,6 @@
 
 #include "RTClib.h"
 RTC_DS1307 rtc;
-char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 const int chipSelect = 53;
 
@@ -258,11 +257,8 @@ void Trace(TFT_HX8357 &tft, double x,  double y,  byte dp,
 }
 
 /*
-
   End of graphing function
-
 */
-
 
 /*============================================================================*/
 
@@ -405,32 +401,21 @@ void loop() {
                 //json generating
                 //Serial.println("json starts here:");
                 
-                StaticJsonBuffer<800> jsonBuffer;
+                StaticJsonBuffer<1400> jsonBuffer;
                 JsonObject& root = jsonBuffer.createObject();
     
                 root["id"] = SENSOR_ID;
-                JsonArray& loc = root.createNestedArray("location");
-                    loc.add(double_with_n_digits(LOC_LONG, 6));
-                    loc.add(double_with_n_digits(LOC_LAT, 6));
                 root["date"] = getDateJ(timeOfFirstRead);
                 root["time"] = getTimeJ(timeOfFirstRead);
                 root["err"] = sensorsError;
                 root["tsamp"] = TSAMP;
-                root["samples"] = DATLEN;
-                JsonArray& read_j = root.createNestedArray("readings");
-                    JsonObject& mono_o = read_j.createNestedObject();
-                    JsonObject& dust_o = read_j.createNestedObject();
-                    JsonObject& temp_o = read_j.createNestedObject();
-                    JsonObject& pres_o = read_j.createNestedObject();
-                    JsonObject& hum_o = read_j.createNestedObject();
-                    
-    
-                JsonArray& amono = mono_o.createNestedArray("mono");
-                JsonArray& adust = dust_o.createNestedArray("dust");
-                JsonArray& atemp = temp_o.createNestedArray("temp");
-                JsonArray& apres = pres_o.createNestedArray("pres");
-                JsonArray& ahum = hum_o.createNestedArray("hum");
-    
+                JsonObject& read_j = root.createNestedObject("readings");
+                JsonArray& amono = read_j.createNestedArray("mono");
+                JsonArray& adust = read_j.createNestedArray("dust");
+                JsonArray& atemp = read_j.createNestedArray("temp");
+                JsonArray& apres = read_j.createNestedArray("pres");
+                JsonArray& ahum = read_j.createNestedArray("hum");
+
                 for (int i=0;i<5;i++){
                     amono.add(double_with_n_digits(data[i].mono, 1));
                     adust.add(double_with_n_digits(data[i].dust, 3));
