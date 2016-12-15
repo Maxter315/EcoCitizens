@@ -423,8 +423,8 @@ void loop() {
                     apres.add(double_with_n_digits(data[i].pres, 1));
                     ahum.add(double_with_n_digits(data[i].hum, 2));
                 }
-                //root.printTo(Serial3);
-                //Serial3.println();
+                root.printTo(Serial3);
+                Serial3.println();
                 
                 iter = 0;
             } else {
@@ -434,8 +434,8 @@ void loop() {
 
         }
 
-        //String temps = Serial3.readString();
-        //tft.println(temps);
+        String temps = Serial3.readString();
+        tft.println(temps);
     }
 }
 
