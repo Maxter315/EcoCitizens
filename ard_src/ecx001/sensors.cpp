@@ -1,10 +1,8 @@
 /*Sensors*/
 #include "sensors.h"
 
-//#include "ecx.h"
-
-#define DELAYL 700
-#define DELAYS 200
+#define DELAYL 250
+#define DELAYS 150
 
 #define DUSTDELAY1 280
 #define DUSTDELAY2 40
@@ -18,7 +16,6 @@
 uint16_t sensorsInit(TFT_HX8357 &tft){
     uint16_t error = 0x00;
     extern SI7021 si7021;
-    T5403 barometer(MODE_I2C);
 
     //Si7021. Temperature & Relative humidity. i2c.
         tft.print("Si7021: ");
@@ -32,7 +29,8 @@ uint16_t sensorsInit(TFT_HX8357 &tft){
             error |= ERRSI7021;
         }
         delay(DELAYS);
-
+/*
+    T5403 barometer(MODE_I2C);
     //T5403. Pressure. i2c.
         tft.print("T5403: ");
         barometer.begin();
@@ -45,7 +43,7 @@ uint16_t sensorsInit(TFT_HX8357 &tft){
             error |= ERRT5403;
         }
         delay(DELAYS);
-
+*/
     //GP2Y10. Dust. Analogue.
         tft.print("GP2Y10: ");
         delay(DELAYL);
@@ -116,12 +114,12 @@ float adcf;
         digitalWrite(MONOHEAT,HIGH);
     }
 
-adc = analogRead(MONOADC); //debug
+//adc = analogRead(MONOADC); //debug
 adcf = adc * (5.0/1024.0);
 float res;
 float ratio;
 ratio = (5.0 - adcf) / adcf;
-res = -500 * (ratio*10/1.5) + 600;
+res = -500 * (ratio*10/2.5) + 600;
 if (res < 0.0) res = 0.0;
 //res = (float) adc;
 return res;

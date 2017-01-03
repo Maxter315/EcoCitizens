@@ -1,5 +1,4 @@
 /*Graph*/
-#include <stdint.h>
 #include <TFT_HX8357.h>
 
 #define LTBLUE    0xB6DF
@@ -41,3 +40,18 @@
 #define DKGREY    0x4A49
 
 void drawSystem (TFT_HX8357&, int16_t, int16_t, int16_t, int16_t, uint16_t, uint16_t);
+
+void Graph(TFT_HX8357 &tft, double x, double y, byte dp,
+                           double gx, double gy, double w, double h,
+                           double xlo, double xhi, double xinc,
+                           double ylo, double yhi, double yinc,
+                           char *title, char *xlabel, char *ylabel,
+                           boolean &redraw, unsigned int color);
+
+void Trace(TFT_HX8357 &tft, double x,  double y,  byte dp,
+           double gx, double gy,
+           double w, double h,
+           double xlo, double xhi, double xinc,
+           double ylo, double yhi, double yinc,
+           char *title, char *xlabel, char *ylabel,
+           boolean &update1, unsigned int color);
