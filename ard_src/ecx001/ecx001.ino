@@ -66,20 +66,19 @@ void setup() {
         tft.setTextColor(TFT_WHITE,TFT_BLACK);
 
         //tft.setCursor(0, 25, 2);
-
     //Sensors init    
         sensorsError = sensorsInit(tft);
         //barometer.begin();
         delay(10);
         si7021.setHumidityRes(12);
-        delay(1000);
+        delay(100);
         //tft.setCursor(0, 110, 2);
-
         if (! rtc.begin()) {
             tft.println("Couldn't find RTC");
         } else {
             tft.println("RTC OK");
         }
+
     //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
 delay(200);

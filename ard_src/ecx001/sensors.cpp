@@ -47,7 +47,7 @@ uint16_t sensorsInit(TFT_HX8357 &tft){
     //GP2Y10. Dust. Analogue.
         tft.print("GP2Y10: ");
         delay(DELAYL);
-        if(0){
+        if(1){
             tft.println("OK");
         }else{
             tft.println("???");
@@ -58,7 +58,7 @@ uint16_t sensorsInit(TFT_HX8357 &tft){
     //MQ-7B. Carbon monoxyde. Analogue.
         tft.print("MQ7-B: ");
         delay(DELAYL);
-        if(0){
+        if(1){
             tft.println("OK");
         }else{
             tft.println("???");
@@ -118,8 +118,11 @@ float adcf;
 adcf = adc * (5.0/1024.0);
 float res;
 float ratio;
-ratio = (5.0 - adcf) / adcf;
-res = -500 * (ratio*10/2.5) + 600;
+ratio = ((5.0 - adcf) / adcf) / 3.1;
+//Serial.print("mono calibrate:");
+//Serial.println(ratio);
+//res = -500 * (ratio*10/2.5) + 600;
+res = exp((log(ratio)+0.0628)/-0.5748);
 if (res < 0.0) res = 0.0;
 //res = (float) adc;
 return res;
