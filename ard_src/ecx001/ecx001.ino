@@ -241,12 +241,14 @@ void loop() {
                 StaticJsonBuffer<1400> jsonBuffer;
                 JsonObject& root = jsonBuffer.createObject();
     
-                root["id"] = SENSOR_ID;
-                root["date"] = getDateJ(timeOfFirstRead);
-                root["time"] = getTimeJ(timeOfFirstRead);
+                root["_id"] = SENSOR_ID;
+                JsonObject& data_j = root.createNestedObject("data");
+                JsonObject& date_j = data_j.createNestedObject("date");
+                date_j["date"] = getDateJ(timeOfFirstRead);
+                date_j["time"] = getTimeJ(timeOfFirstRead);
                 root["err"] = sensorsError;
                 root["tsamp"] = TSAMP;
-                JsonObject& read_j = root.createNestedObject("readings");
+                JsonObject& read_j = data_j.createNestedObject("readings");
                 JsonArray& amono = read_j.createNestedArray("mono");
                 JsonArray& adust = read_j.createNestedArray("dust");
                 JsonArray& atemp = read_j.createNestedArray("temp");
