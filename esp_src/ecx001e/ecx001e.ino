@@ -19,6 +19,7 @@ StaticJsonBuffer<600> jsonBuffer;
 void setup() {
 
     USE_SERIAL.begin(115200);
+    USE_SERIAL.setTimeout(2000);
     // USE_SERIAL.setDebugOutput(true);
     while(!set_rcvd){
       if(USE_SERIAL.available()){
@@ -55,15 +56,24 @@ void setup() {
 }
 
 int var = 0;
-
+//char buffer[400];
 void loop() {
     // wait for WiFi connection
     if((WiFiMulti.run() == WL_CONNECTED)) {
 
         if(USE_SERIAL.available()){
             String sensorsData;
+            /*
+            while(USE_SERIAL.available()){
+              char tmp = USE_SERIAL.read();
+              if (tmp != '\n'){
+                sensorsData += tmp;     
+              }
+            }
+            */
+            
             sensorsData = USE_SERIAL.readStringUntil('\n');
-
+            USE_SERIAL.println(sensorsData.length());
             HTTPClient http;
 
             //USE_SERIAL.print("     [HTTP] begin...\n");
@@ -90,12 +100,13 @@ void loop() {
             http.end();
             USE_SERIAL.print(sensorsData);
         }else{
-            USE_SERIAL.print("esp:");
-            USE_SERIAL.println(var);
-            var++;
+            //USE_SERIAL.print("esp:");
+            //USE_SERIAL.println(var);
+            //var++;
+            delayMicroseconds(100);
         }
-        delay(500);
+        
     }
-    delay(1000);
+    delay(1);
 }
 

@@ -277,9 +277,9 @@ void loop() {
 
 
         }
-
-        //String temps = Serial3.readString();
-        //tft.println(temps);
+        tft.setCursor(0, 16*17, 2);
+        String temps = Serial3.readString();
+        tft.println(temps);
     }
 }
 
