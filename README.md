@@ -15,10 +15,10 @@ EGAP challenge.<br>
     "_id":"UA-VN-0001",                  //an unique identification number
     "data":{
         "date":{
-            "date":"2016-09-09",                 //date and time when first reading was performed
+            "date":"2017-09-09",         //date and time when first reading was performed
             "time":"09:13:45"
         },
-    "readings":{
+        "readings":{
             "mono":110.0,                //concentration of carbon monoxide, [ppm], MQ-7B
             "dust":0.011,                //concentrarion of dust, [mg/m3], GP2Y10
             "temp":24.5,                 //temperature, [degC], Si7021/T5403
