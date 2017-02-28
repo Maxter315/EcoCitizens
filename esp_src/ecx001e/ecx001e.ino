@@ -71,7 +71,6 @@ void loop() {
               }
             }
             */
-            
             sensorsData = USE_SERIAL.readStringUntil('\n');
             USE_SERIAL.println(sensorsData.length());
             HTTPClient http;
@@ -88,6 +87,9 @@ void loop() {
     
             //USE_SERIAL.print("[HTTP] POST...\n");
             // start connection and send HTTP header
+            String a = "Content-Type";
+            String b = "application/json"; 
+            http.addHeader(a,b,0,0);
             int httpCode = http.POST(sensorsData);
             if(httpCode > 0) {
                 // HTTP header has been send and Server response header has been handled
@@ -98,7 +100,7 @@ void loop() {
             }
 
             http.end();
-            USE_SERIAL.print(sensorsData);
+            //USE_SERIAL.print(sensorsData);
         }else{
             //USE_SERIAL.print("esp:");
             //USE_SERIAL.println(var);
@@ -107,6 +109,7 @@ void loop() {
         }
         
     }
+    //USE_SERIAL.print("RECONNECT");
     delay(1);
 }
 

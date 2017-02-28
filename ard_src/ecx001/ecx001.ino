@@ -55,7 +55,7 @@ void setup() {
         Serial.begin(9600);
         Serial.println("Serial OK");
         Serial3.begin(115200);
-        Serial3.setTimeout(50);
+        Serial3.setTimeout(150);
     
     //Display initialization
         tft.init();
@@ -117,6 +117,8 @@ delay(200);
     Reading accumRead;
     Reading data[DATLEN];
     Reading singleRead;
+    String jsonTime;
+
 void loop() {
     DateTime now;
 
@@ -145,23 +147,10 @@ void loop() {
             tft.fillRect(0,7*16,140,2*16,TFT_BLACK);
             tft.print("[sample]: ");
             tft.println(nsamp);
-            tft.print("[iter]: ");
-            tft.println(iter);
-
-        //drawSystem(tft,150,20,250,150,DKRED,YELLOW);
-        
-        
-        //Graph(tft, x, y, 1, gx, gy, w, h, 0, 6.5, 1, -1, 1, .25, "", "", "", display1, YELLOW);
-        /*
-        update1 = true;
-        for (x = 0; x <= 6.3; x += .1) {
-            y = sin(x);
-            Trace(tft, x, y, 1, gx, gy, w, h, 0, 6.5, 1, -1, 1, .5, "hum", "t", "hum", update1, YELLOW);
-        }
-        */
-      
-        
-        
+            tft.print("[time]: ");
+            jsonTime = getTimeJ(timeOfFirstRead);
+            tft.println(jsonTime);
+              
         accumRead.mono = accumRead.mono + singleRead.mono;
         accumRead.dust = accumRead.dust + singleRead.dust;
         accumRead.temp = accumRead.temp + singleRead.temp;
@@ -171,9 +160,10 @@ void loop() {
         if (nsamp >= TSAMP){
             //averaging and storing to data[i];
             //float denom = (float)TSAMP;
-            if (iter == 0) {
-                timeOfFirstRead = rtc.now();
-            }
+            //if (iter == 0) {
+            timeOfFirstRead = rtc.now();
+            jsonTime = getTimeJ(timeOfFirstRead);
+            //}
 
             accumRead.mono = accumRead.mono / TSAMPF;
             accumRead.dust = accumRead.dust / TSAMPF;
@@ -181,46 +171,46 @@ void loop() {
             accumRead.pres = accumRead.pres / TSAMPF;
             accumRead.hum = accumRead.hum / TSAMPF;
 
-            data[iter] = accumRead;
+            //data[iter] = accumRead;
 
             // graph ======================================
-            if(indx<96){
-              buffer_A[indx] = accumRead.temp;
-              buffer_B[indx] = accumRead.dust;
-              indx++;
-            }else{
-              for(int i=0;i<95;i++){
-                buffer_A[i] = buffer_A[i+1];
-                buffer_B[i] = buffer_B[i+1];
-              }
-              buffer_A[95] = accumRead.temp;
-              buffer_B[95] = accumRead.dust;
-            }
+                if(indx<96){
+                  buffer_A[indx] = accumRead.temp;
+                  buffer_B[indx] = accumRead.dust;
+                  indx++;
+                }else{
+                  for(int i=0;i<95;i++){
+                    buffer_A[i] = buffer_A[i+1];
+                    buffer_B[i] = buffer_B[i+1];
+                  }
+                  buffer_A[95] = accumRead.temp;
+                  buffer_B[95] = accumRead.dust;
+                }
 
 
-            double x,y,xll,xlh;
-            int gx=175,gy=95,w=295,h=90;
-            
-            tft.fillRect(140,0,340,230,TFT_BLACK);
-            
-            double tmp_ind;
-            tmp_ind = (96-indx)*2.5;
-            xll = -240 + tmp_ind;
-            xlh = tmp_ind;
+                double x,y,xll,xlh;
+                int gx=175,gy=95,w=295,h=90;
+                
+                tft.fillRect(140,0,340,230,TFT_BLACK);
+                
+                double tmp_ind;
+                tmp_ind = (96-indx)*2.5;
+                xll = -240 + tmp_ind;
+                xlh = tmp_ind;
 
-            update1 = true;
-            for (int i=0;i<96;i++) {
-              //y = sin(i);
-              x = -240 + (96-indx + i)*2.5;
-              Trace(tft, x, buffer_A[i], 1, gx, gy, w, h, xll, xlh, 60, -10, 40, 10, "temp", "t", "", update1, YELLOW);
-            }
+                update1 = true;
+                for (int i=0;i<96;i++) {
+                  //y = sin(i);
+                  x = -240 + (96-indx + i)*2.5;
+                  Trace(tft, x, buffer_A[i], 1, gx, gy, w, h, xll, xlh, 60, -10, 40, 10, "temp", "t", "", update1, YELLOW);
+                }
 
-            update1 = true;
-            for (int i=0;i<96;i++) {
-              //y = sin(i);
-              x = -240 + (96-indx + i)*2.5;
-              Trace(tft, x, buffer_B[i], 1, gx, gy+115, w, h, xll, xlh, 60, 0, 0.6, 0.1, "dust", "t", "", update1, YELLOW);
-            }
+                update1 = true;
+                for (int i=0;i<96;i++) {
+                  //y = sin(i);
+                  x = -240 + (96-indx + i)*2.5;
+                  Trace(tft, x, buffer_B[i], 1, gx, gy+115, w, h, xll, xlh, 60, 0, 0.6, 0.1, "dust", "t", "", update1, YELLOW);
+                }
             // end graph ==================================
 
             String dataString = genDatalog(now, accumRead);
@@ -233,7 +223,7 @@ void loop() {
             dataFile.println(dataString);
             dataFile.close();
             
-            if (iter >= 4){
+            //if (iter >= 4){
                 //json, send to esp
                 //json generating
                 //Serial.println("json starts here:");
@@ -245,30 +235,41 @@ void loop() {
                 JsonObject& data_j = root.createNestedObject("data");
                 JsonObject& date_j = data_j.createNestedObject("date");
                 date_j["date"] = getDateJ(timeOfFirstRead);
-                date_j["time"] = getTimeJ(timeOfFirstRead);
-                root["err"] = sensorsError;
-                root["tsamp"] = TSAMP;
+                date_j["time"] = jsonTime;
+                //root["tsamp"] = TSAMP;
+                
                 JsonObject& read_j = data_j.createNestedObject("readings");
+                /*
                 JsonArray& amono = read_j.createNestedArray("mono");
                 JsonArray& adust = read_j.createNestedArray("dust");
                 JsonArray& atemp = read_j.createNestedArray("temp");
                 JsonArray& apres = read_j.createNestedArray("pres");
                 JsonArray& ahum = read_j.createNestedArray("hum");
+                */
+                //for (int i=0;i<5;i++){
+                read_j["mono"] = double_with_n_digits(accumRead.mono, 1);
+                read_j["dust"] = double_with_n_digits(accumRead.dust, 3);
+                read_j["temp"] = double_with_n_digits(accumRead.temp, 2);
+                read_j["pres"] = (uint32_t)accumRead.pres;
+                read_j["hum"] = double_with_n_digits(accumRead.hum, 2);
 
-                for (int i=0;i<5;i++){
-                    amono.add(double_with_n_digits(data[i].mono, 1));
-                    adust.add(double_with_n_digits(data[i].dust, 3));
-                    atemp.add(double_with_n_digits(data[i].temp, 2));
-                    apres.add(double_with_n_digits(data[i].pres, 1));
-                    ahum.add(double_with_n_digits(data[i].hum, 2));
-                }
+                root["err"] = sensorsError;
+                /*
+                amono.add(double_with_n_digits(data[i].mono, 1));
+                adust.add(double_with_n_digits(data[i].dust, 3));
+                atemp.add(double_with_n_digits(data[i].temp, 2));
+                apres.add((uint32_t)data[i].pres);
+                ahum.add(double_with_n_digits(data[i].hum, 2));
+                */
+                //}
+                tft.fillRect(0,16*16,480,4*16,TFT_BLACK);
                 root.printTo(Serial3);
                 Serial3.println();
                 
                 iter = 0;
-            } else {
-                iter++;
-            }
+            //} else {
+                //iter++;
+            //}
             accumRead.mono = 0.0;
             accumRead.dust = 0.0;
             accumRead.temp = 0.0;
@@ -277,7 +278,7 @@ void loop() {
 
 
         }
-        tft.setCursor(0, 16*17, 2);
+        tft.setCursor(0, 16*16, 2);
         String temps = Serial3.readString();
         tft.println(temps);
     }
