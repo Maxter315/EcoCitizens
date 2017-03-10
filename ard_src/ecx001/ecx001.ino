@@ -108,36 +108,42 @@ void setup() {
             tft.println("SD OK");
         }
     
-    delay(750);
+    delay(2);
 
     // time sync
     tft.print("TIME SYNC: ");
 
+
     bool time_rcvd = false;
+    bool cond = false;
     String sync_time;
-
-    while(!time_rcvd){
-      if(Serial3.available()){
-        sync_time = Serial3.readStringUntil('\n');
-        time_rcvd = true;
-      }else{
-        delayMicroseconds(500);
-        Serial3.print(":");
-      }
-    }
-
     StaticJsonBuffer<200> jsBuff;
-    JsonObject& stime_jo = jsBuff.parseObject(sync_time);
 
-    if (!stime_jo.success()) {
-        tft.println("FAILED");
+    do{
+        time_rcvd = false;
+        while(!time_rcvd){
+          if(Serial3.available()){
+            sync_time = Serial3.readStringUntil('\n');
+            time_rcvd = true;
+          }else{
+            delayMicroseconds(500);
+            //tft.print("o");
+          }
+        }
+    
+        JsonObject& stime_jo = jsBuff.parseObject(sync_time);
+        cond = stime_jo.success();
+    if (!cond) {
+        tft.print("x");
+        tft.print(sync_time);
+        delayMicroseconds(500);
     }else{
         tft.println("OK");
-        const char* date_rx = stime_jo["date"];
-        const char* time_rx = stime_jo["time"];
-        rtc.adjust(DateTime(date_rx, time_rx));
+        unsigned long epoch = stime_jo["epoch"];
+        tft.println(epoch);
+        rtc.adjust(DateTime(epoch));
     }
-
+    }while(!cond);
     //sample input: date = "Dec 26 2009", time = "12:34:56"
     //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
