@@ -79,9 +79,8 @@ void setup() {
             tft.println("RTC OK");
         }
 
-    //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+    delay(200);
 
-delay(200);
     //SDCARD INITIALIZATION
         String dataString = "#time(HH:MM:SS),\tCO(ppm),\tdust(mg/m3),\ttemp(degC),\tpres(Pa),\thum(%)";
         bool sderror = false;
@@ -110,14 +109,47 @@ delay(200);
         }
     
     delay(750);
+
+    // time sync
+    tft.print("TIME SYNC: ");
+
+    bool time_rcvd = false;
+    String sync_time;
+
+    while(!time_rcvd){
+      if(Serial3.available()){
+        sync_time = Serial3.readStringUntil('\n');
+        time_rcvd = true;
+      }else{
+        delayMicroseconds(500);
+        Serial3.print(":");
+      }
+    }
+
+    StaticJsonBuffer<200> jsBuff;
+    JsonObject& stime_jo = jsBuff.parseObject(sync_time);
+
+    if (!stime_jo.success()) {
+        tft.println("FAILED");
+    }else{
+        tft.println("OK");
+        const char* date_rx = stime_jo["date"];
+        const char* time_rx = stime_jo["time"];
+        rtc.adjust(DateTime(date_rx, time_rx));
+    }
+
+    //sample input: date = "Dec 26 2009", time = "12:34:56"
+    //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+
+    // Clear screen
     tft.setCursor(0, 0, 2);
     tft.fillScreen(TFT_BLACK);
 }
 
-    Reading accumRead;
-    Reading data[DATLEN];
-    Reading singleRead;
-    String jsonTime;
+Reading accumRead;
+Reading data[DATLEN];
+Reading singleRead;
+String jsonTime;
 
 void loop() {
     DateTime now;
@@ -126,15 +158,14 @@ void loop() {
     currentTime = millis();
 
     if (currentTime - prevTime > dt){
-        //tft.fillScreen(TFT_BLACK);
 
         prevTime = currentTime;
         nsamp>=TSAMP? nsamp=1 : nsamp++;
 
-        //if (!(nsamp % 5)){
+        if (!(nsamp % 3)){
             now = rtc.now();
-        //}
-                
+        }
+
         //Display some data
             tft.setCursor(0, 0, 2);
             tft.println(getTimeString(now));
@@ -236,7 +267,6 @@ void loop() {
                 JsonObject& date_j = data_j.createNestedObject("date");
                 date_j["date"] = getDateJ(timeOfFirstRead);
                 date_j["time"] = jsonTime;
-                //root["tsamp"] = TSAMP;
                 
                 JsonObject& read_j = data_j.createNestedObject("readings");
                 /*
@@ -275,7 +305,6 @@ void loop() {
             accumRead.temp = 0.0;
             accumRead.pres = 0.0;
             accumRead.hum = 0.0;
-
 
         }
         tft.setCursor(0, 16*16, 2);
