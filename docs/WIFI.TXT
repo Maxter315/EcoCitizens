@@ -1,0 +1,1 @@
+{"ssid":"spot_name","password":"defaultpass","server":"http://ecocitizens.online:80/"}
