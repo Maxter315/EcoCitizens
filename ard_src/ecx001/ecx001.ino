@@ -4,6 +4,7 @@
 #define TSAMP 150
 #define TSAMPF 150.0
 #define DATLEN 5
+#define RESP 3
 
 #define SENSOR_ID "UA-KR-0001"
 
@@ -46,11 +47,17 @@ uint8_t nsamp = 1, iter = 0;
 unsigned long currentTime, prevTime;
 unsigned long dt = DELTATIME;
 DateTime timeOfFirstRead;
+uint8_t reset_counter;
 
 double buffer_A[96],buffer_B[96];
 int indx = 0;
 
 void setup() {
+
+    //reset pin init
+        reset_counter = 0;
+        digitalWrite(RESP,HIGH);
+        pinMode(RESP,OUTPUT);
 
         Serial.begin(9600);
         Serial.println("Serial OK");
@@ -118,6 +125,7 @@ void setup() {
     bool cond = false;
     String sync_time;
     StaticJsonBuffer<200> jsBuff;
+    uint32_t timer_rcv = 0;
 
     do{
         time_rcvd = false;
@@ -143,6 +151,12 @@ void setup() {
         tft.println(epoch);
         rtc.adjust(DateTime(epoch));
     }
+    if(timer_rcv > 300000){
+        tft.println("SYNC TIME OUT");
+        cond = true;
+    }else{
+        timer_rcv++;
+    }
     }while(!cond);
     //sample input: date = "Dec 26 2009", time = "12:34:56"
     //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
@@ -159,19 +173,19 @@ String jsonTime;
 
 void loop() {
     DateTime now;
-
     now = rtc.now();
+
     currentTime = millis();
 
     if (currentTime - prevTime > dt){
 
         prevTime = currentTime;
         nsamp>=TSAMP? nsamp=1 : nsamp++;
-
+/*
         if (!(nsamp % 3)){
             now = rtc.now();
         }
-
+*/
         //Display some data
             tft.setCursor(0, 0, 2);
             tft.println(getTimeString(now));
@@ -197,18 +211,14 @@ void loop() {
         if (nsamp >= TSAMP){
             //averaging and storing to data[i];
             //float denom = (float)TSAMP;
-            //if (iter == 0) {
             timeOfFirstRead = rtc.now();
             jsonTime = getTimeJ(timeOfFirstRead);
-            //}
 
             accumRead.mono = accumRead.mono / TSAMPF;
             accumRead.dust = accumRead.dust / TSAMPF;
             accumRead.temp = accumRead.temp / TSAMPF;
             accumRead.pres = accumRead.pres / TSAMPF;
             accumRead.hum = accumRead.hum / TSAMPF;
-
-            //data[iter] = accumRead;
 
             // graph ======================================
                 if(indx<96){
@@ -255,19 +265,13 @@ void loop() {
 
             char filename[16]="20160101.csv";
             temp.toCharArray(filename,sizeof(filename));
-            //tft.println(filename);
             File dataFile = SD.open(filename, FILE_WRITE);
             dataFile.println(dataString);
             dataFile.close();
             
-            //if (iter >= 4){
-                //json, send to esp
-                //json generating
-                //Serial.println("json starts here:");
-                
+            //json generating
                 StaticJsonBuffer<1400> jsonBuffer;
                 JsonObject& root = jsonBuffer.createObject();
-    
                 root["_id"] = SENSOR_ID;
                 JsonObject& data_j = root.createNestedObject("data");
                 JsonObject& date_j = data_j.createNestedObject("date");
@@ -275,14 +279,7 @@ void loop() {
                 date_j["time"] = jsonTime;
                 
                 JsonObject& read_j = data_j.createNestedObject("readings");
-                /*
-                JsonArray& amono = read_j.createNestedArray("mono");
-                JsonArray& adust = read_j.createNestedArray("dust");
-                JsonArray& atemp = read_j.createNestedArray("temp");
-                JsonArray& apres = read_j.createNestedArray("pres");
-                JsonArray& ahum = read_j.createNestedArray("hum");
-                */
-                //for (int i=0;i<5;i++){
+
                 read_j["mono"] = double_with_n_digits(accumRead.mono, 1);
                 read_j["dust"] = double_with_n_digits(accumRead.dust, 3);
                 read_j["temp"] = double_with_n_digits(accumRead.temp, 2);
@@ -290,28 +287,23 @@ void loop() {
                 read_j["hum"] = double_with_n_digits(accumRead.hum, 2);
 
                 root["err"] = sensorsError;
-                /*
-                amono.add(double_with_n_digits(data[i].mono, 1));
-                adust.add(double_with_n_digits(data[i].dust, 3));
-                atemp.add(double_with_n_digits(data[i].temp, 2));
-                apres.add((uint32_t)data[i].pres);
-                ahum.add(double_with_n_digits(data[i].hum, 2));
-                */
-                //}
-                tft.fillRect(0,16*16,480,4*16,TFT_BLACK);
-                root.printTo(Serial3);
-                Serial3.println();
-                
-                iter = 0;
-            //} else {
-                //iter++;
-            //}
+
+            tft.fillRect(0,16*16,480,4*16,TFT_BLACK);
+            root.printTo(Serial3);
+            Serial3.println();
+            
+            iter = 0;
             accumRead.mono = 0.0;
             accumRead.dust = 0.0;
             accumRead.temp = 0.0;
             accumRead.pres = 0.0;
             accumRead.hum = 0.0;
 
+            if (reset_counter > 71){
+                digitalWrite(RESP,LOW);
+            }else{
+                reset_counter++;
+            }
         }
         tft.setCursor(0, 16*16, 2);
         String temps = Serial3.readString();
