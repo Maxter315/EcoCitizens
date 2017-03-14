@@ -4,7 +4,8 @@
 #define TSAMP 150
 #define TSAMPF 150.0
 #define DATLEN 5
-#define RESP 3
+#define RESPE 2
+#define RESPA 3
 
 #define SENSOR_ID "UA-KR-0001"
 
@@ -54,11 +55,14 @@ int indx = 0;
 
 void setup() {
 
-    //reset pin init
+    //Reset pins init
         reset_counter = 0;
-        digitalWrite(RESP,HIGH);
-        pinMode(RESP,OUTPUT);
+        digitalWrite(RESPE,HIGH);
+        pinMode(RESPE,OUTPUT);
+        digitalWrite(RESPA,HIGH);
+        pinMode(RESPA,OUTPUT);
 
+    //Serial init
         Serial.begin(9600);
         Serial.println("Serial OK");
         Serial3.begin(115200);
@@ -72,7 +76,6 @@ void setup() {
         tft.setTextSize(1);
         tft.setTextColor(TFT_WHITE,TFT_BLACK);
 
-        //tft.setCursor(0, 25, 2);
     //Sensors init    
         sensorsError = sensorsInit(tft);
         //barometer.begin();
@@ -117,53 +120,51 @@ void setup() {
     
     delay(2);
 
-    // time sync
-    tft.print("TIME SYNC: ");
+    //Time sync
+        tft.print("TIME SYNC: ");
 
+        bool time_rcvd = false;
+        bool cond = false;
+        String sync_time;
+        StaticJsonBuffer<200> jsBuff;
+        uint32_t timer_rcv = 0;
 
-    bool time_rcvd = false;
-    bool cond = false;
-    String sync_time;
-    StaticJsonBuffer<200> jsBuff;
-    uint32_t timer_rcv = 0;
-
-    do{
-        time_rcvd = false;
-        while(!time_rcvd){
-          if(Serial3.available()){
-            sync_time = Serial3.readStringUntil('\n');
-            time_rcvd = true;
-          }else{
+        do{
+            time_rcvd = false;
+            while(!time_rcvd){
+              if(Serial3.available()){
+                sync_time = Serial3.readStringUntil('\n');
+                time_rcvd = true;
+              }else{
+                delayMicroseconds(500);
+              }
+            }
+        
+            JsonObject& stime_jo = jsBuff.parseObject(sync_time);
+            cond = stime_jo.success();
+        if (!cond) {
+            tft.print("x");
+            tft.print(sync_time);
             delayMicroseconds(500);
-            //tft.print("o");
-          }
+        }else{
+            tft.println("OK");
+            unsigned long epoch = stime_jo["epoch"];
+            tft.println(epoch);
+            rtc.adjust(DateTime(epoch));
         }
-    
-        JsonObject& stime_jo = jsBuff.parseObject(sync_time);
-        cond = stime_jo.success();
-    if (!cond) {
-        tft.print("x");
-        tft.print(sync_time);
-        delayMicroseconds(500);
-    }else{
-        tft.println("OK");
-        unsigned long epoch = stime_jo["epoch"];
-        tft.println(epoch);
-        rtc.adjust(DateTime(epoch));
-    }
-    if(timer_rcv > 300000){
-        tft.println("SYNC TIME OUT");
-        cond = true;
-    }else{
-        timer_rcv++;
-    }
-    }while(!cond);
-    //sample input: date = "Dec 26 2009", time = "12:34:56"
-    //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
+        if(timer_rcv > 300000){
+            tft.println("SYNC TIME OUT");
+            cond = true;
+        }else{
+            timer_rcv++;
+        }
+        }while(!cond);
+        //sample input: date = "Dec 26 2009", time = "12:34:56"
+        //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
 
-    // Clear screen
-    tft.setCursor(0, 0, 2);
-    tft.fillScreen(TFT_BLACK);
+    //Clear screen
+        tft.setCursor(0, 0, 2);
+        tft.fillScreen(TFT_BLACK);
 }
 
 Reading accumRead;
@@ -300,7 +301,9 @@ void loop() {
             accumRead.hum = 0.0;
 
             if (reset_counter > 71){
-                digitalWrite(RESP,LOW);
+                digitalWrite(RESPE,LOW);
+                delay(1000);
+                digitalWrite(RESPA,LOW);
             }else{
                 reset_counter++;
             }
