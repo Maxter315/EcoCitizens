@@ -1,4 +1,4 @@
-#define VERSION 001
+#define VERSION 002
 #define DELTATIME 1000
 //!!debug!! TSAMP = 150
 #define TSAMP 150
@@ -128,6 +128,7 @@ void setup() {
         String sync_time;
         StaticJsonBuffer<200> jsBuff;
         uint32_t timer_rcv = 0;
+        uint32_t timer_rcv_esp = 0;
 
         do{
             time_rcvd = false;
@@ -137,27 +138,29 @@ void setup() {
                 time_rcvd = true;
               }else{
                 delayMicroseconds(500);
+                timer_rcv_esp++;
+                if(timer_rcv_esp > 10000) time_rcvd = true;
               }
             }
         
             JsonObject& stime_jo = jsBuff.parseObject(sync_time);
             cond = stime_jo.success();
-        if (!cond) {
-            tft.print("x");
-            tft.print(sync_time);
-            delayMicroseconds(500);
-        }else{
-            tft.println("OK");
-            unsigned long epoch = stime_jo["epoch"];
-            tft.println(epoch);
-            rtc.adjust(DateTime(epoch));
-        }
-        if(timer_rcv > 300000){
-            tft.println("SYNC TIME OUT");
-            cond = true;
-        }else{
-            timer_rcv++;
-        }
+            if (!cond) {
+                tft.print("x");
+                tft.print(sync_time);
+                delayMicroseconds(500);
+            }else{
+                tft.println("OK");
+                unsigned long epoch = stime_jo["epoch"];
+                tft.println(epoch);
+                rtc.adjust(DateTime(epoch));
+            }
+            if(timer_rcv > 300000){
+                tft.println("SYNC TIME OUT");
+                cond = true;
+            }else{
+                timer_rcv++;
+            }
         }while(!cond);
         //sample input: date = "Dec 26 2009", time = "12:34:56"
         //rtc.adjust(DateTime(F(__DATE__), F(__TIME__)));
@@ -302,6 +305,7 @@ void loop() {
 
             if (reset_counter > 71){
                 digitalWrite(RESPE,LOW);
+                tft.println("RESET!");
                 delay(1000);
                 digitalWrite(RESPA,LOW);
             }else{
